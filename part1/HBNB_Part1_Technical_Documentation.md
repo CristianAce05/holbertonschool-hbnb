@@ -69,39 +69,112 @@ The **facade pattern** is used to simplify interactions between the **Presentati
 ---
 
 ## 5. Package Diagram (Mermaid)
+![Alt text](./HBNB%20File.png)
 
-```mermaid
-%% Mermaid package diagram for HBnB three-layer architecture
-flowchart TB
-    subgraph Presentation_Layer [Presentation Layer]
-        US[UserService]
-        PS[PlaceService]
-        RS[ReviewService]
-        API[API Endpoints]
-    end
+# HBnB Business Logic Layer – Detailed Class Diagram
 
-    subgraph Business_Logic_Layer [Business Logic Layer]
-        F[HBnBFacade]
-        U[User]
-        P[Place]
-        R[Review]
-        A[Amenity]
-    end
+## Objective
+Design a **detailed class diagram** for the **Business Logic Layer** of HBnB, showing:
 
-    subgraph Persistence_Layer [Persistence Layer]
-        UDAO[UserDAO]
-        PDAO[PlaceDAO]
-        RDAO[ReviewDAO]
-        ADAO[AmenityDAO]
-    end
+- Entities (`User`, `Place`, `Review`, `Amenity`)  
+- Attributes and methods  
+- Relationships (associations, compositions, multiplicity)  
+- Key identifiers (`UUID`), creation, and update timestamps  
 
-    %% Communication arrows
-    Presentation_Layer -->|uses facade| F
-    F --> U
-    F --> P
-    F --> R
-    F --> A
-    U --> UDAO
-    P --> PDAO
-    R --> RDAO
-    A --> ADAO
+---
+
+## 1. Key Entities and Attributes
+
+### 1.1 User
+- **Attributes**
+  - `id: UUID` – Unique identifier
+  - `name: str`
+  - `email: str`
+  - `password: str`
+  - `created_at: datetime`
+  - `updated_at: datetime`
+- **Methods**
+  - `create_place()`
+  - `write_review()`
+  - `update_profile()`
+
+### 1.2 Place
+- **Attributes**
+  - `id: UUID` – Unique identifier
+  - `name: str`
+  - `description: str`
+  - `city: str`
+  - `user_id: UUID` – Owner (association to User)
+  - `created_at: datetime`
+  - `updated_at: datetime`
+- **Methods**
+  - `add_amenity()`
+  - `add_review()`
+  - `calculate_rating()`
+
+### 1.3 Review
+- **Attributes**
+  - `id: UUID`
+  - `user_id: UUID` – Reviewer
+  - `place_id: UUID` – Reviewed place
+  - `text: str`
+  - `rating: float`
+  - `created_at: datetime`
+  - `updated_at: datetime`
+- **Methods**
+  - `edit_review()`
+
+### 1.4 Amenity
+- **Attributes**
+  - `id: UUID`
+  - `name: str`
+  - `description: str`
+  - `created_at: datetime`
+  - `updated_at: datetime`
+- **Methods**
+  - `update_details()`
+
+---
+
+## 2. Relationships
+
+- **User ↔ Place**
+  - One-to-Many: A user can own multiple places (`1..*`)  
+- **User ↔ Review**
+  - One-to-Many: A user can write multiple reviews (`1..*`)  
+- **Place ↔ Review**
+  - One-to-Many: A place can have multiple reviews (`1..*`)  
+- **Place ↔ Amenity**
+  - Many-to-Many: A place can have multiple amenities, and an amenity can belong to multiple places  
+- All entities have **timestamps** (`created_at`, `updated_at`)  
+- All entities use **UUIDs** as identifiers  
+
+---
+
+## 3. Mermaid Class Diagram
+![Alt text](HBNB%20Mermaid%20Class.png)
+
+# HBnB Application – Sequence Diagrams for API Calls
+
+## Objective
+This document provides sequence diagrams for four API calls in the HBnB application. Each diagram illustrates:
+
+- Interaction between layers (Presentation, Business Logic, Persistence)  
+- Flow of data and method calls  
+- Step-by-step processing of user requests  
+
+---
+
+## 1. User Registration
+![Alt text](HBNB%20User%20Regis.png)
+
+## 2. Place Creation
+![Alt text](HBNB%20Place.png)
+
+## 3. Review Submission
+![Alt text](HBNB%20Review%20Sub.png)
+
+## 4. Fetching a List of Places
+![Alt text](HBNB%20List.png)
+
+
