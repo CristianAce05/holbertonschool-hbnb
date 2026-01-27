@@ -1,87 +1,107 @@
-# **HBnB Evolution – Part 1: Technical Documentation**
+# HBnB Application: Three-Layer Architecture & Facade Pattern
+
+## Objective
+This document presents a high-level **package diagram** illustrating the **three-layer architecture** of the HBnB application and the **communication between layers** via the **facade pattern**. It provides a conceptual overview of the application's organization and interactions.
 
 ---
 
-## **1. Context and Objective**
+## 1. Layered Architecture Overview
 
-**HBnB Evolution** is a simplified AirBnB-like application. This technical documentation provides a **blueprint for its architecture, business logic, and interactions**.  
+The HBnB application is structured into three main layers:
 
-**Objective:**  
+### 1.1 Presentation Layer
+- **Purpose:** Handles interaction between users and the application.  
+- **Components:**  
+  - Services: `UserService`, `PlaceService`, `ReviewService`  
+  - API endpoints  
+- **Responsibilities:**  
+  - Accepts user requests  
+  - Forwards requests to the **Business Logic Layer** via a **facade**  
+  - Returns responses to users  
 
-- Ensure clarity in the **three-layered design**.  
-- Document **entity relationships and API flows**.  
-- Provide a guide for the **implementation phases**.
+### 1.2 Business Logic Layer
+- **Purpose:** Implements the core business rules and manages entities.  
+- **Components:**  
+  - Models: `User`, `Place`, `Review`, `Amenity`  
+  - Facade: `HBnBFacade`  
+- **Responsibilities:**  
+  - Process business operations  
+  - Interact with **Persistence Layer** for data storage/retrieval  
+  - Expose a simplified interface to the **Presentation Layer**  
 
----
-
-## **2. Architecture Overview**
-
-HBnB Evolution follows a **three-layer architecture**:  
-
-**1. Presentation Layer (Services / API)**  
-
-- Handles user interaction.  
-- Provides API endpoints for operations such as user registration, place listing, review submission, etc.  
-- Communicates with the Business Logic Layer **through a Facade interface**.
-
-**2. Business Logic Layer (Models / Core Logic)**  
-
-- Contains the core models: `User`, `Place`, `Review`, `Amenity`.  
-- Implements business rules:  
-  - Reviews must belong to a user and a place.  
-  - Places belong to an owner.  
-- Exposes a **Facade** for simplified interaction with the Presentation Layer.
-
-**3. Persistence Layer (Database / Repositories)**  
-
-- Responsible for storing and retrieving data from the database.  
-- Provides CRUD operations via Repository or DAO classes.  
-
-**Key Design Principle:**  
-
-- **Facade Pattern:**  
-  - Presentation Layer calls **a single interface (`HbnbFacade`)** instead of interacting with each model.  
-  - Reduces coupling, simplifies API calls, and enforces business rules consistently.
+### 1.3 Persistence Layer
+- **Purpose:** Handles data storage and retrieval.  
+- **Components:**  
+  - Data Access Objects (DAOs): `UserDAO`, `PlaceDAO`, `ReviewDAO`, `AmenityDAO`  
+- **Responsibilities:**  
+  - Perform CRUD operations on the database  
+  - Serve requests from the **Business Logic Layer**  
 
 ---
 
-## **3. High-Level Package Diagram**
+## 2. Facade Pattern
 
-This diagram illustrates the three layers and their interactions via the **Facade Pattern**:
+The **facade pattern** is used to simplify interactions between the **Presentation Layer** and the **Business Logic Layer**:
+
+- Provides a **single interface** (`HBnBFacade`) for all presentation services.
+- Hides the complexity of models and persistence operations.
+- Example methods: `createUser()`, `getPlaceDetails()`, `addReview()`.
+
+---
+
+## 3. Key Components by Layer
+
+| Layer | Components |
+|-------|------------|
+| **Presentation Layer** | `UserService`, `PlaceService`, `ReviewService`, API Endpoints |
+| **Business Logic Layer** | `HBnBFacade`, `User`, `Place`, `Review`, `Amenity` |
+| **Persistence Layer** | `UserDAO`, `PlaceDAO`, `ReviewDAO`, `AmenityDAO` |
+
+---
+
+## 4. Communication Flow
+
+1. **Presentation Layer → Facade:** All user requests go through `HBnBFacade`.
+2. **Facade → Models:** Facade calls the relevant models to process business logic.
+3. **Models → Persistence Layer:** Models or facade request data access objects to retrieve/store data.
+4. **Persistence → Business Logic → Presentation:** Response flows back up through the layers.
+
+---
+
+## 5. Package Diagram (Mermaid)
 
 ```mermaid
-classDiagram
-%% === Presentation Layer ===
-class PresentationLayer {
-    <<package>>
-    +UserService
-    +PlaceService
-    +ReviewService
-    +AmenityService
-    +APIEndpoints
-}
+%% Mermaid package diagram for HBnB three-layer architecture
+flowchart TB
+    subgraph Presentation_Layer [Presentation Layer]
+        US[UserService]
+        PS[PlaceService]
+        RS[ReviewService]
+        API[API Endpoints]
+    end
 
-%% === Business Logic Layer ===
-class BusinessLogicLayer {
-    <<package>>
-    +User
-    +Place
-    +Review
-    +Amenity
-    +HbnbFacade
-}
+    subgraph Business_Logic_Layer [Business Logic Layer]
+        F[HBnBFacade]
+        U[User]
+        P[Place]
+        R[Review]
+        A[Amenity]
+    end
 
-%% === Persistence Layer ===
-class PersistenceLayer {
-    <<package>>
-    +UserRepository
-    +PlaceRepository
-    +ReviewRepository
-    +AmenityRepository
-    +DatabaseConnection
-}
+    subgraph Persistence_Layer [Persistence Layer]
+        UDAO[UserDAO]
+        PDAO[PlaceDAO]
+        RDAO[ReviewDAO]
+        ADAO[AmenityDAO]
+    end
 
-%% === Layer Relationships ===
-PresentationLayer --> BusinessLogicLayer : <<uses>> via Facade
-BusinessLogicLayer --> PersistenceLayer : <<uses>> for CRUD operations
-
+    %% Communication arrows
+    Presentation_Layer -->|uses facade| F
+    F --> U
+    F --> P
+    F --> R
+    F --> A
+    U --> UDAO
+    P --> PDAO
+    R --> RDAO
+    A --> ADAO
