@@ -9,8 +9,19 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Dict
 
-from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, String, Boolean, DateTime, JSON
+from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy import (
+    Column,
+    String,
+    Boolean,
+    DateTime,
+    JSON,
+    ForeignKey,
+    Table,
+    Integer,
+    Float,
+    Text,
+)
 
 
 Base = declarative_base()
@@ -22,8 +33,8 @@ def _now_dt():
 
 class BaseModelMixin:
     id = Column(String, primary_key=True)
-    created_at = Column(DateTime(timezone=True), nullable=False)
-    updated_at = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=_now_dt)
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=_now_dt, onupdate=_now_dt)
 
     def to_dict(self) -> Dict[str, Any]:
         # Used by repositories to convert ORM objects to dicts
@@ -43,29 +54,51 @@ class User(Base, BaseModelMixin):
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
     is_admin = Column(Boolean, default=False, nullable=False)
+    # relationships
+    places = relationship("Place", back_populates="user", cascade="all, delete-orphan")
+    reviews = relationship("Review", back_populates="user", cascade="all, delete-orphan")
 
 
 class Place(Base, BaseModelMixin):
     __tablename__ = "places"
     name = Column(String, nullable=False)
-    description = Column(String, nullable=True)
-    number_rooms = Column(String, nullable=True)
-    number_bathrooms = Column(String, nullable=True)
-    max_guest = Column(String, nullable=True)
-    price_by_night = Column(String, nullable=True)
-    latitude = Column(String, nullable=True)
-    longitude = Column(String, nullable=True)
-    user_id = Column(String, nullable=True, index=True)
-    amenity_ids = Column(JSON, default=list, nullable=True)
+    description = Column(Text, nullable=True)
+    number_rooms = Column(Integer, nullable=True)
+    number_bathrooms = Column(Integer, nullable=True)
+    max_guest = Column(Integer, nullable=True)
+    price_by_night = Column(Integer, nullable=True)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    # relationship to owner
+    user = relationship("User", back_populates="places")
+    # reviews relationship
+    reviews = relationship("Review", back_populates="place", cascade="all, delete-orphan")
+    # amenities: many-to-many via association table added below
+    amenities = relationship("Amenity", secondary=lambda: place_amenity_table, back_populates="places")
 
 
 class Review(Base, BaseModelMixin):
     __tablename__ = "reviews"
-    user_id = Column(String, nullable=False, index=True)
-    place_id = Column(String, nullable=False, index=True)
-    text = Column(String, nullable=False)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    place_id = Column(String, ForeignKey("places.id"), nullable=False, index=True)
+    text = Column(Text, nullable=False)
+    # relationships
+    user = relationship("User", back_populates="reviews")
+    place = relationship("Place", back_populates="reviews")
 
 
 class Amenity(Base, BaseModelMixin):
     __tablename__ = "amenities"
     name = Column(String, nullable=False)
+    # places many-to-many
+    places = relationship("Place", secondary=lambda: place_amenity_table, back_populates="amenities")
+
+
+# Association table for Place <-> Amenity many-to-many
+place_amenity_table = Table(
+    "place_amenity",
+    Base.metadata,
+    Column("place_id", String, ForeignKey("places.id"), primary_key=True),
+    Column("amenity_id", String, ForeignKey("amenities.id"), primary_key=True),
+)
