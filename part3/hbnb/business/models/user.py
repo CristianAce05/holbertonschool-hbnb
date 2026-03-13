@@ -1,10 +1,12 @@
-"""User model for HBNB."""
+"""User model for HBNB with password hashing."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Dict
 
 from .base import BaseModel
+
+import bcrypt
 
 
 @dataclass
@@ -22,4 +24,18 @@ class User(BaseModel):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "User":
-        return super().from_dict(data)
+        # Create instance from known fields
+        inst = super().from_dict(data)
+        # If a raw password was provided in data, hash it before storing
+        if isinstance(data, dict) and data.get("password"):
+            raw = data.get("password")
+            if isinstance(raw, str) and raw:
+                hashed = bcrypt.hashpw(raw.encode("utf-8"), bcrypt.gensalt())
+                inst.password = hashed.decode("utf-8")
+        return inst
+
+    def to_dict(self) -> Dict[str, Any]:
+        # Exclude password from serialized representation
+        d = super().to_dict()
+        d.pop("password", None)
+        return d
