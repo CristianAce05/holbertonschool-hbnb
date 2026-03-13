@@ -1,8 +1,9 @@
 """Review repository implemented with SQLAlchemy ORM."""
+
 from __future__ import annotations
 
 from copy import deepcopy
-from datetime import datetime,timezone
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 
 from sqlalchemy import create_engine, select
@@ -31,7 +32,9 @@ class ReviewRepository:
             u.place_id = payload.get("place_id")
             u.text = payload.get("text")
             now = _now_iso()
-            u.created_at = u.updated_at = datetime.fromisoformat(now.replace("Z", "+00:00"))
+            u.created_at = u.updated_at = datetime.fromisoformat(
+                now.replace("Z", "+00:00")
+            )
             session.add(u)
             session.commit()
             return u.to_dict()
@@ -56,7 +59,9 @@ class ReviewRepository:
         finally:
             session.close()
 
-    def update(self, cls_name: str, obj_id: str, updates: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def update(
+        self, cls_name: str, obj_id: str, updates: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         session = self._session()
         try:
             stmt = select(ORMReview).where(ORMReview.id == obj_id)

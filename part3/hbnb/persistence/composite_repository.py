@@ -1,13 +1,21 @@
 """Composite repository that routes User operations to UserRepository and
 falls back to a generic repository for other classes.
 """
+
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 
 class CompositeRepository:
-    def __init__(self, user_repo, generic_repo, place_repo=None, review_repo=None, amenity_repo=None):
+    def __init__(
+        self,
+        user_repo,
+        generic_repo,
+        place_repo=None,
+        review_repo=None,
+        amenity_repo=None,
+    ):
         self.user_repo = user_repo
         self.generic_repo = generic_repo
         self.place_repo = place_repo

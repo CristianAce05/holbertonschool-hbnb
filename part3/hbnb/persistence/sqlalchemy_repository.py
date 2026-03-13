@@ -11,6 +11,7 @@ or otherwise initialize the database schema. Table creation and DB
 initialization should be performed in the next task to avoid accidental
 initialization during code changes.
 """
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -21,14 +22,12 @@ from typing import Dict, Any, List, Optional
 from sqlalchemy import (
     Column,
     String,
-    JSON,
     DateTime,
+    JSON,
     create_engine,
     select,
 )
-from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import declarative_base, sessionmaker
-
 
 Base = declarative_base()
 
@@ -91,7 +90,9 @@ class SQLAlchemyRepository:
     def get(self, cls_name: str, obj_id: str) -> Optional[Dict[str, Any]]:
         session = self._ensure_session()
         try:
-            stmt = select(ObjectStore).where(ObjectStore.cls_name == cls_name, ObjectStore.id == obj_id)
+            stmt = select(ObjectStore).where(
+                ObjectStore.cls_name == cls_name, ObjectStore.id == obj_id
+            )
             res = session.execute(stmt).scalars().first()
             if res is None:
                 return None
@@ -108,12 +109,16 @@ class SQLAlchemyRepository:
         finally:
             session.close()
 
-    def update(self, cls_name: str, obj_id: str, updates: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def update(
+        self, cls_name: str, obj_id: str, updates: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         if not isinstance(updates, dict):
             raise ValueError("updates must be a dict")
         session = self._ensure_session()
         try:
-            stmt = select(ObjectStore).where(ObjectStore.cls_name == cls_name, ObjectStore.id == obj_id)
+            stmt = select(ObjectStore).where(
+                ObjectStore.cls_name == cls_name, ObjectStore.id == obj_id
+            )
             row = session.execute(stmt).scalars().first()
             if row is None:
                 return None
@@ -124,7 +129,9 @@ class SQLAlchemyRepository:
                 data[k] = deepcopy(v)
             data["updated_at"] = _now_iso()
             row.data = data
-            row.updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
+            row.updated_at = datetime.fromisoformat(
+                data["updated_at"].replace("Z", "+00:00")
+            )
             session.add(row)
             session.commit()
             return deepcopy(data)
@@ -134,7 +141,9 @@ class SQLAlchemyRepository:
     def delete(self, cls_name: str, obj_id: str) -> bool:
         session = self._ensure_session()
         try:
-            stmt = select(ObjectStore).where(ObjectStore.cls_name == cls_name, ObjectStore.id == obj_id)
+            stmt = select(ObjectStore).where(
+                ObjectStore.cls_name == cls_name, ObjectStore.id == obj_id
+            )
             row = session.execute(stmt).scalars().first()
             if row is None:
                 return False

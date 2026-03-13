@@ -4,6 +4,7 @@ This module defines a shared declarative `Base` and mapped classes for
 the domain entities. Table creation is intentionally left to the
 initialization/migration step handled elsewhere.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -15,14 +16,12 @@ from sqlalchemy import (
     String,
     Boolean,
     DateTime,
-    JSON,
     ForeignKey,
     Table,
     Integer,
     Float,
     Text,
 )
-
 
 Base = declarative_base()
 
@@ -34,16 +33,28 @@ def _now_dt():
 class BaseModelMixin:
     id = Column(String, primary_key=True)
     created_at = Column(DateTime(timezone=True), nullable=False, default=_now_dt)
-    updated_at = Column(DateTime(timezone=True), nullable=False, default=_now_dt, onupdate=_now_dt)
+    updated_at = Column(
+        DateTime(timezone=True), nullable=False, default=_now_dt, onupdate=_now_dt
+    )
 
     def to_dict(self) -> Dict[str, Any]:
         # Used by repositories to convert ORM objects to dicts
         out = {c.name: getattr(self, c.name) for c in self.__table__.columns}
         # Normalize datetimes to ISO Z
         if out.get("created_at"):
-            out["created_at"] = out["created_at"].astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+            out["created_at"] = (
+                out["created_at"]
+                .astimezone(timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z")
+            )
         if out.get("updated_at"):
-            out["updated_at"] = out["updated_at"].astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+            out["updated_at"] = (
+                out["updated_at"]
+                .astimezone(timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z")
+            )
         return out
 
 
@@ -56,7 +67,9 @@ class User(Base, BaseModelMixin):
     is_admin = Column(Boolean, default=False, nullable=False)
     # relationships
     places = relationship("Place", back_populates="user", cascade="all, delete-orphan")
-    reviews = relationship("Review", back_populates="user", cascade="all, delete-orphan")
+    reviews = relationship(
+        "Review", back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class Place(Base, BaseModelMixin):
@@ -73,9 +86,13 @@ class Place(Base, BaseModelMixin):
     # relationship to owner
     user = relationship("User", back_populates="places")
     # reviews relationship
-    reviews = relationship("Review", back_populates="place", cascade="all, delete-orphan")
+    reviews = relationship(
+        "Review", back_populates="place", cascade="all, delete-orphan"
+    )
     # amenities: many-to-many via association table added below
-    amenities = relationship("Amenity", secondary=lambda: place_amenity_table, back_populates="places")
+    amenities = relationship(
+        "Amenity", secondary=lambda: place_amenity_table, back_populates="places"
+    )
 
 
 class Review(Base, BaseModelMixin):
@@ -92,7 +109,9 @@ class Amenity(Base, BaseModelMixin):
     __tablename__ = "amenities"
     name = Column(String, nullable=False)
     # places many-to-many
-    places = relationship("Place", secondary=lambda: place_amenity_table, back_populates="amenities")
+    places = relationship(
+        "Place", secondary=lambda: place_amenity_table, back_populates="amenities"
+    )
 
 
 # Association table for Place <-> Amenity many-to-many

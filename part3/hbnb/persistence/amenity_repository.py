@@ -1,4 +1,5 @@
 """Amenity repository implemented with SQLAlchemy ORM."""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -29,7 +30,9 @@ class AmenityRepository:
             u = ORMAmenity()
             u.name = payload.get("name") or ""
             now = _now_iso()
-            u.created_at = u.updated_at = datetime.fromisoformat(now.replace("Z", "+00:00"))
+            u.created_at = u.updated_at = datetime.fromisoformat(
+                now.replace("Z", "+00:00")
+            )
             session.add(u)
             session.commit()
             return u.to_dict()
@@ -54,7 +57,9 @@ class AmenityRepository:
         finally:
             session.close()
 
-    def update(self, cls_name: str, obj_id: str, updates: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def update(
+        self, cls_name: str, obj_id: str, updates: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         session = self._session()
         try:
             stmt = select(ORMAmenity).where(ORMAmenity.id == obj_id)

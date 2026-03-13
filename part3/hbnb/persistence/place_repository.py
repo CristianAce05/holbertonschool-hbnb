@@ -2,6 +2,7 @@
 
 Basic CRUD for Place model. No relationships are added here.
 """
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -44,7 +45,9 @@ class PlaceRepository:
             u.user_id = payload.get("user_id")
             u.amenity_ids = payload.get("amenity_ids") or []
             now = _now_iso()
-            u.created_at = u.updated_at = datetime.fromisoformat(now.replace("Z", "+00:00"))
+            u.created_at = u.updated_at = datetime.fromisoformat(
+                now.replace("Z", "+00:00")
+            )
             session.add(u)
             session.commit()
             return u.to_dict()
@@ -69,7 +72,9 @@ class PlaceRepository:
         finally:
             session.close()
 
-    def update(self, cls_name: str, obj_id: str, updates: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def update(
+        self, cls_name: str, obj_id: str, updates: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         session = self._session()
         try:
             stmt = select(ORMPlace).where(ORMPlace.id == obj_id)

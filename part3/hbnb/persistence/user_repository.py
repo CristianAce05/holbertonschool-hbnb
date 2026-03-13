@@ -6,6 +6,7 @@ exposes the same minimal CRUD interface used by the facade.
 Note: this repository does not create tables. Callers should initialize
 the database schema in a controlled migration/initialization step.
 """
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -15,7 +16,7 @@ from typing import Dict, Any, List, Optional
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
-from .models import User as ORMUser, Base
+from .models import User as ORMUser
 
 
 def _now_iso() -> str:
@@ -44,7 +45,9 @@ class UserRepository:
             u.is_admin = bool(payload.get("is_admin", False))
             # timestamps
             now = _now_iso()
-            u.created_at = u.updated_at = datetime.fromisoformat(now.replace("Z", "+00:00"))
+            u.created_at = u.updated_at = datetime.fromisoformat(
+                now.replace("Z", "+00:00")
+            )
             session.add(u)
             session.commit()
             return u.to_dict()
@@ -71,7 +74,9 @@ class UserRepository:
         finally:
             session.close()
 
-    def update(self, cls_name: str, obj_id: str, updates: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def update(
+        self, cls_name: str, obj_id: str, updates: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         session = self._session()
         try:
             stmt = select(ORMUser).where(ORMUser.id == obj_id)

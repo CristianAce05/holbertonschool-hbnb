@@ -12,6 +12,7 @@ Commands:
   count <ClassName>                    Count instances
   quit / EOF                           Exit
 """
+
 from __future__ import annotations
 
 import cmd
@@ -41,7 +42,7 @@ class HBNBCommand(cmd.Cmd):
         cls = parts[0]
         payload = {}
         if len(parts) > 1:
-            rest = arg[len(cls) :].strip()
+            rest = arg[len(cls):].strip()
             try:
                 payload = json.loads(rest)
             except Exception:
@@ -104,7 +105,7 @@ class HBNBCommand(cmd.Cmd):
                     if "=" in token:
                         k, v = token.split("=", 1)
                         # strip quotes
-                        if v.startswith("\"") and v.endswith("\""):
+                        if v.startswith('"') and v.endswith('"'):
                             v = v[1:-1]
                         updates[k] = v
             except Exception:

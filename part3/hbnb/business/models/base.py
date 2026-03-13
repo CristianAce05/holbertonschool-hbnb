@@ -1,4 +1,5 @@
 """Base model for HBNB business entities."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field, asdict
@@ -25,7 +26,11 @@ class BaseModel:
     def from_dict(cls, data: Dict[str, Any]) -> "BaseModel":
         # Allow subclasses to pass through unknown fields via dataclass
         # Construct with only known fields
-        fields = {f.name for f in cls.__dataclass_fields__.values()} if hasattr(cls, "__dataclass_fields__") else set()
+        fields = (
+            {f.name for f in cls.__dataclass_fields__.values()}
+            if hasattr(cls, "__dataclass_fields__")
+            else set()
+        )
         kw = {k: v for k, v in data.items() if k in fields}
         return cls(**kw)
 

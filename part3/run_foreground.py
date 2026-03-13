@@ -3,6 +3,7 @@
 
 Use this when you need a visible container IP or a hint for IDE port forwarding.
 """
+
 import socket
 import sys
 import argparse
@@ -30,8 +31,12 @@ def _get_container_ips():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run HBnB dev server with helpful launcher messages")
-    parser.add_argument("--port", "-p", type=int, default=5000, help="Port to bind the server to")
+    parser = argparse.ArgumentParser(
+        description="Run HBnB dev server with helpful launcher messages"
+    )
+    parser.add_argument(
+        "--port", "-p", type=int, default=5000, help="Port to bind the server to"
+    )
     args = parser.parse_args()
     app = create_app()
     port = args.port
@@ -43,11 +48,15 @@ def main():
         print(" - %s:%d" % (ip, port))
 
     print("")
-    print(f"If you're using an IDE (VS Code, Codespaces, Gitpod), forward container port {port} to your browser.")
+    print(
+        f"If you're using an IDE (VS Code, Codespaces, Gitpod), forward container port {port} to your browser."
+    )
     print("Examples:")
     print(" - curl from inside container:")
     print(f"    curl http://127.0.0.1:{port}/health")
-    print(" - If port-forwarded by your IDE, open the forwarded URL the IDE shows in your browser.")
+    print(
+        " - If port-forwarded by your IDE, open the forwarded URL the IDE shows in your browser."
+    )
     print("")
     sys.stdout.flush()
 

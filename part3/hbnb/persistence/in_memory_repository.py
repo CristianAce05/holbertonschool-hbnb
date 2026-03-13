@@ -4,6 +4,7 @@ This repository stores objects as dicts keyed by class name and id.
 It is intentionally lightweight so it can be swapped for a DB-backed
 repository in Part 3 with minimal changes to the facade.
 """
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -61,7 +62,9 @@ class InMemoryRepository:
         self._ensure_cls(cls_name)
         return [deepcopy(v) for v in self._data[cls_name].values()]
 
-    def update(self, cls_name: str, obj_id: str, updates: Dict[str, Any]) -> Dict[str, Any] | None:
+    def update(
+        self, cls_name: str, obj_id: str, updates: Dict[str, Any]
+    ) -> Dict[str, Any] | None:
         if not isinstance(updates, dict):
             raise ValidationError("updates must be a dict")
         self._ensure_cls(cls_name)
@@ -87,7 +90,9 @@ class InMemoryRepository:
 
     def list_all(self) -> Dict[str, List[Dict[str, Any]]]:
         """Return all stored objects grouped by class name."""
-        return {k: [deepcopy(v) for v in vals.values()] for k, vals in self._data.items()}
+        return {
+            k: [deepcopy(v) for v in vals.values()] for k, vals in self._data.items()
+        }
 
     def count(self, cls_name: str) -> int:
         """Return number of instances for a given class."""

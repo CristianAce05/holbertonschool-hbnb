@@ -1,4 +1,5 @@
 """Run script for HBNB Part 2 app."""
+
 from hbnb import create_app
 
 
