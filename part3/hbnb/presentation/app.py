@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from flask import Flask, request, jsonify
 from flask import current_app
+import os
 from flask_jwt_extended import (
     JWTManager,
     create_access_token,
@@ -18,6 +19,7 @@ from flask_jwt_extended import (
 )
 
 from ..business.facade import HBNBFacade, NotFoundError, ValidationError
+import click
 from ..persistence.in_memory_repository import InMemoryRepository
 
 
@@ -35,7 +37,14 @@ def create_app(config: object | dict | None = None):
 
     # Initialize JWT if requested in config
     if app.config.get("ENABLE_AUTH"):
-        app.config.setdefault("JWT_SECRET_KEY", "change-me-in-prod")
+        # Prefer explicit config; fall back to environment variable
+        key = app.config.get("JWT_SECRET_KEY") or os.environ.get("JWT_SECRET_KEY")
+        if not key:
+            raise RuntimeError(
+                "ENABLE_AUTH is True but JWT_SECRET_KEY is not set. "
+                "Set app.config['JWT_SECRET_KEY'] or the environment variable JWT_SECRET_KEY."
+            )
+        app.config["JWT_SECRET_KEY"] = key
         JWTManager(app)
 
     def _sanitize_user(obj: dict) -> dict:
@@ -98,6 +107,41 @@ def create_app(config: object | dict | None = None):
         if not current_app.config.get("ENABLE_AUTH"):
             return None
         return get_jwt_identity()
+
+    @app.cli.command("init-db")
+    @click.option("--db", default=None, help="Database URI to initialize")
+    def init_db(db: str | None = None):
+        """Create database tables for SQLAlchemy-backed repositories.
+
+        If `--db` is not provided the command will read
+        `app.config['SQLALCHEMY_DATABASE_URI']` or fall back to
+        `sqlite:///hbnb_dev.db`.
+        """
+        from sqlalchemy import create_engine
+
+        uri = db or app.config.get("SQLALCHEMY_DATABASE_URI") or "sqlite:///hbnb_dev.db"
+
+        # Create engine and create metadata for known modules
+        engine = create_engine(uri, future=True)
+
+        # Create tables for the generic object store (if present)
+        try:
+            from ..persistence.sqlalchemy_repository import Base as _obj_base
+
+            _obj_base.metadata.create_all(engine)
+        except Exception:
+            # ignore if module not available
+            pass
+
+        # Create tables for ORM models (if present)
+        try:
+            from ..persistence.models import Base as _models_base
+
+            _models_base.metadata.create_all(engine)
+        except Exception:
+            pass
+
+        print(f"Initialized database: {uri}")
 
     # Users
     @app.route("/api/v1/users", methods=["POST"])
