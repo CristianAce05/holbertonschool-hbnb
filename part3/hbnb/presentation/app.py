@@ -2,7 +2,7 @@
 from flask import Flask, request, jsonify
 from flask_restx import Api, Namespace, Resource, fields
 import bcrypt
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, verify_jwt_in_request
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, verify_jwt_in_request, get_jwt
 from flask_jwt_extended.exceptions import JWTExtendedException, NoAuthorizationError
 
 from ..business.facade import HBNBFacade, NotFoundError, ValidationError
@@ -109,7 +109,8 @@ def create_app(config: object | dict | None = None):
                 ok = False
             if not ok:
                 return {"error": "Bad credentials"}, 401
-            access = create_access_token(identity=matched.get("id"), additional_claims={"email": matched.get("email")})
+            # include is_admin in token claims
+            access = create_access_token(identity=matched.get("id"), additional_claims={"email": matched.get("email"), "is_admin": bool(matched.get("is_admin", False))})
             return {"access_token": access}, 200
 
     api.add_namespace(auth_ns, path="/api/v1/auth")
@@ -119,6 +120,14 @@ def create_app(config: object | dict | None = None):
     class UsersList(Resource):
         @users_ns.expect(user_model, validate=False)
         def post(self):
+            # only admins may create users
+            try:
+                verify_jwt_in_request()
+            except Exception as e:
+                return {"error": str(e)}, 401
+            claims = get_jwt()
+            if not claims.get("is_admin"):
+                return {"error": "Forbidden"}, 403
             payload = request.json or {}
             # basic required fields
             if not isinstance(payload, dict):
@@ -127,6 +136,10 @@ def create_app(config: object | dict | None = None):
                 return {"error": "Missing email"}, 400
             if not payload.get("password"):
                 return {"error": "Missing password"}, 400
+            # ensure unique email
+            for u in facade.list("User"):
+                if u.get("email") == payload.get("email"):
+                    return {"error": "email already exists"}, 400
             try:
                 obj = facade.create("User", payload)
             except ValidationError as e:
@@ -164,16 +177,24 @@ def create_app(config: object | dict | None = None):
                 verify_jwt_in_request()
             except Exception as e:
                 return {"error": str(e)}, 401
-            # only the user themselves can update their data
+            claims = get_jwt()
             cur_id = get_jwt_identity()
-            if cur_id != obj_id:
+            # allow admin to update any user, otherwise only owner
+            if not claims.get("is_admin") and cur_id != obj_id:
                 return {"error": "Forbidden"}, 403
             # prevent updating immutable fields
             for forbidden in ("id", "created_at"):
                 payload.pop(forbidden, None)
-            # disallow changing email and password via this endpoint
-            for forbidden in ("email", "password"):
-                payload.pop(forbidden, None)
+            if not claims.get("is_admin"):
+                # disallow changing email and password via this endpoint for non-admins
+                for forbidden in ("email", "password"):
+                    payload.pop(forbidden, None)
+            else:
+                # admin changing email: ensure unique
+                if "email" in payload:
+                    for u in facade.list("User"):
+                        if u.get("email") == payload.get("email") and u.get("id") != obj_id:
+                            return {"error": "email already exists"}, 400
             try:
                 obj = facade.update("User", obj_id, payload)
             except NotFoundError:
@@ -200,6 +221,13 @@ def create_app(config: object | dict | None = None):
             payload = request.json or {}
             if not isinstance(payload, dict):
                 return {"error": "Invalid payload"}, 400
+            try:
+                verify_jwt_in_request()
+            except Exception as e:
+                return {"error": str(e)}, 401
+            claims = get_jwt()
+            if not claims.get("is_admin"):
+                return {"error": "Forbidden"}, 403
             if not payload.get("name"):
                 return {"error": "Missing name"}, 400
             try:
@@ -227,6 +255,13 @@ def create_app(config: object | dict | None = None):
             payload = request.json or {}
             if not isinstance(payload, dict):
                 return {"error": "Invalid payload"}, 400
+            try:
+                verify_jwt_in_request()
+            except Exception as e:
+                return {"error": str(e)}, 401
+            claims = get_jwt()
+            if not claims.get("is_admin"):
+                return {"error": "Forbidden"}, 403
             for forbidden in ("id", "created_at"):
                 payload.pop(forbidden, None)
             try:
@@ -298,8 +333,12 @@ def create_app(config: object | dict | None = None):
                 verify_jwt_in_request()
             except Exception as e:
                 return {"error": str(e)}, 401
-            # force owner to be the authenticated user
+            claims = get_jwt()
+            # force owner to be the authenticated user unless admin provided explicit owner
             user_id = get_jwt_identity()
+            if claims.get("is_admin") and payload.get("user_id"):
+                # admin may create for another user
+                user_id = payload.get("user_id")
             payload["user_id"] = user_id
             # validation
             if not payload.get("name"):
@@ -354,13 +393,14 @@ def create_app(config: object | dict | None = None):
                 verify_jwt_in_request()
             except Exception as e:
                 return {"error": str(e)}, 401
+            claims = get_jwt()
             cur_id = get_jwt_identity()
-            # ensure owner
+            # ensure owner unless admin
             try:
                 existing = facade.get("Place", obj_id)
             except NotFoundError:
                 return {"error": "Not found"}, 404
-            if existing.get("user_id") != cur_id:
+            if not claims.get("is_admin") and existing.get("user_id") != cur_id:
                 return {"error": "Forbidden"}, 403
             for forbidden in ("id", "created_at"):
                 payload.pop(forbidden, None)
@@ -400,7 +440,7 @@ def create_app(config: object | dict | None = None):
                 existing = facade.get("Place", obj_id)
             except NotFoundError:
                 return {"error": "Not found"}, 404
-            if existing.get("user_id") != cur_id:
+            if not claims.get("is_admin") and existing.get("user_id") != cur_id:
                 return {"error": "Forbidden"}, 403
             facade.delete("Place", obj_id)
             return ("", 204)
@@ -428,6 +468,7 @@ def create_app(config: object | dict | None = None):
                 verify_jwt_in_request()
             except Exception as e:
                 return {"error": str(e)}, 401
+            claims = get_jwt()
             user_id = get_jwt_identity()
             # require place_id and text
             if not payload.get("place_id"):
@@ -439,8 +480,8 @@ def create_app(config: object | dict | None = None):
                 place = facade.get("Place", payload.get("place_id"))
             except Exception:
                 return {"error": "place_id not found"}, 400
-            # prevent reviewing own place
-            if place.get("user_id") == user_id:
+            # prevent reviewing own place (admins may bypass)
+            if not claims.get("is_admin") and place.get("user_id") == user_id:
                 return {"error": "Cannot review your own place"}, 400
             # prevent duplicate reviews by same user on same place
             try:
@@ -487,7 +528,7 @@ def create_app(config: object | dict | None = None):
                 existing = facade.get("Review", obj_id)
             except NotFoundError:
                 return {"error": "Not found"}, 404
-            if existing.get("user_id") != cur_id:
+            if not claims.get("is_admin") and existing.get("user_id") != cur_id:
                 return {"error": "Forbidden"}, 403
             # prevent changing relational keys
             for forbidden in ("id", "created_at", "user_id", "place_id"):
@@ -512,7 +553,7 @@ def create_app(config: object | dict | None = None):
                 existing = facade.get("Review", obj_id)
             except NotFoundError:
                 return {"error": "Not found"}, 404
-            if existing.get("user_id") != cur_id:
+            if not claims.get("is_admin") and existing.get("user_id") != cur_id:
                 return {"error": "Forbidden"}, 403
             facade.delete("Review", obj_id)
             return ("", 204)

@@ -15,12 +15,15 @@ class User(BaseModel):
     password: str = ""
     first_name: str = ""
     last_name: str = ""
+    is_admin: bool = False
 
     def __post_init__(self):
         if not isinstance(self.email, str):
             raise TypeError("email must be a string")
         if not isinstance(self.password, str):
             raise TypeError("password must be a string")
+        if not isinstance(self.is_admin, bool):
+            raise TypeError("is_admin must be a boolean")
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "User":
@@ -32,6 +35,12 @@ class User(BaseModel):
             if isinstance(raw, str) and raw:
                 hashed = bcrypt.hashpw(raw.encode("utf-8"), bcrypt.gensalt())
                 inst.password = hashed.decode("utf-8")
+        # copy is_admin if provided
+        if isinstance(data, dict) and "is_admin" in data:
+            try:
+                inst.is_admin = bool(data.get("is_admin"))
+            except Exception:
+                inst.is_admin = False
         return inst
 
     def to_dict(self) -> Dict[str, Any]:
