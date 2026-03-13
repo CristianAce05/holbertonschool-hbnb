@@ -10,7 +10,11 @@ class AuthIntegrationTestCase(unittest.TestCase):
         # use a >=32-byte secret for HMAC safety
         long_secret = "A" * 40
         self.app = create_app(
-            {"TESTING": True, "ENABLE_AUTH": True, "JWT_SECRET_KEY": long_secret}
+            {
+                "TESTING": True,
+                "ENABLE_AUTH": True,
+                "JWT_SECRET_KEY": long_secret,
+            }
         )
         self.client = self.app.test_client()
 
@@ -38,9 +42,10 @@ class AuthIntegrationTestCase(unittest.TestCase):
 
     def test_forbidden_create_place_for_other_user(self):
         # create two users
-        r1 = self.post_json("/api/v1/users", {"email": "a@example.com", "password": "pw"})
-        a_id = r1.get_json()["id"]
-        r2 = self.post_json("/api/v1/users", {"email": "b@example.com", "password": "pw"})
+        self.post_json("/api/v1/users", {"email": "a@example.com", "password": "pw"})
+        r2 = self.post_json(
+            "/api/v1/users", {"email": "b@example.com", "password": "pw"}
+        )
         b_id = r2.get_json()["id"]
         # login as user A
         r = self.post_json("/api/v1/auth/login", {"email": "a@example.com", "password": "pw"})

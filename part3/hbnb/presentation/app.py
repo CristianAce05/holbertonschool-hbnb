@@ -73,7 +73,7 @@ def create_app(config: object | dict | None = None):
                     "id": owner.get("id"),
                     "email": owner.get("email"),
                 }
-            except Exception:
+            except NotFoundError:
                 out["owner"] = {"id": owner_id}
         else:
             out["owner"] = None
@@ -85,7 +85,7 @@ def create_app(config: object | dict | None = None):
             try:
                 a = facade.get("Amenity", aid)
                 amenities.append(a)
-            except Exception:
+            except NotFoundError:
                 # ignore missing amenities
                 pass
         out["amenities"] = amenities
@@ -96,7 +96,7 @@ def create_app(config: object | dict | None = None):
             place_reviews = [
                 r for r in all_reviews if r.get("place_id") == out.get("id")
             ]
-        except Exception:
+        except NotFoundError:
             place_reviews = []
         out["reviews"] = place_reviews
         return out
@@ -137,7 +137,7 @@ def create_app(config: object | dict | None = None):
             from ..persistence.sqlalchemy_repository import Base as _obj_base
 
             _obj_base.metadata.create_all(engine)
-        except Exception:
+        except ImportError:
             # ignore if module not available
             pass
 
@@ -146,7 +146,7 @@ def create_app(config: object | dict | None = None):
             from ..persistence.models import Base as _models_base
 
             _models_base.metadata.create_all(engine)
-        except Exception:
+        except ImportError:
             pass
 
         print(f"Initialized database: {uri}")
@@ -242,7 +242,7 @@ def create_app(config: object | dict | None = None):
                 data.get("password").encode("utf-8"), stored.encode("utf-8")
             ):
                 return {"error": "Bad credentials"}, 401
-        except Exception:
+        except (ValueError, TypeError):
             return {"error": "Bad credentials"}, 401
         # create token with is_admin claim
         token = create_access_token(
@@ -352,11 +352,11 @@ def create_app(config: object | dict | None = None):
                 try:
                     if int(payload["price_by_night"]) < 0:
                         return {"error": "price_by_night must be >= 0"}, 400
-                except Exception:
+                except (ValueError, TypeError):
                     return {"error": "price_by_night must be int"}, 400
             try:
                 facade.get("User", payload.get("user_id"))
-            except Exception:
+            except NotFoundError:
                 return {"error": "user_id not found"}, 400
             try:
                 obj = facade.create("Place", payload)
@@ -436,7 +436,7 @@ def create_app(config: object | dict | None = None):
                 return {"error": "Missing text"}, 400
             try:
                 facade.get("Place", payload.get("place_id"))
-            except Exception:
+            except NotFoundError:
                 return {"error": "place_id not found"}, 400
             # enforce auth: creator must be authenticated and owner (or admin)
             if current_app.config.get("ENABLE_AUTH"):
