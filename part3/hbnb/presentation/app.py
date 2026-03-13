@@ -6,9 +6,14 @@ from ..business.facade import HBNBFacade, NotFoundError, ValidationError
 from ..persistence.in_memory_repository import InMemoryRepository
 
 
-def create_app(config: dict | None = None):
+def create_app(config: object | dict | None = None):
     app = Flask(__name__)
-    app.config.update(config or {})
+    # support either a config class/object or a plain dict
+    if config:
+        if isinstance(config, dict):
+            app.config.update(config)
+        else:
+            app.config.from_object(config)
 
     api = Api(app, version="0.1", title="HBNB API", doc="/docs")
 
