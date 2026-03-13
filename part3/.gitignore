@@ -39,6 +39,16 @@ env/
 env.bak/
 venv.bak/
 
+# Environment files
+.env
+.env.*
+
+# Mypy
+.mypy_cache/
+
+# IPython/Jupyter
+.ipynb_checkpoints/
+
 # IDEs and editors
 .idea/
 .vscode/
@@ -67,3 +77,13 @@ coverage.xml
 # Build artifacts
 dist/
 build/
+
+# SQLite DB files (local dev)
+*.db
+*.sqlite
+*.sqlite3
+
+# Packages
+*.egg-info/
+*.egg
+pip-wheel-metadata/
