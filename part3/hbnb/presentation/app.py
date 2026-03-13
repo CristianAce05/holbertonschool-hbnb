@@ -4,6 +4,7 @@ This implementation intentionally keeps behavior simple and synchronous
 and relies on the existing `HBNBFacade` and repository implementations.
 It provides the endpoints exercised by the test suite in `tests/test_api.py`.
 """
+
 from __future__ import annotations
 
 from flask import Flask, request, jsonify

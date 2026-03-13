@@ -42,7 +42,7 @@ class HBNBCommand(cmd.Cmd):
         cls = parts[0]
         payload = {}
         if len(parts) > 1:
-            rest = arg[len(cls):].strip()
+            rest = arg[len(cls) :].strip()
             try:
                 payload = json.loads(rest)
             except Exception:
