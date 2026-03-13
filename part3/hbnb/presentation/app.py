@@ -26,7 +26,16 @@ def create_app(config: object | dict | None = None):
     app.register_error_handler(JWTExtendedException, lambda e: ({"error": str(e)}, 401))
     app.register_error_handler(NoAuthorizationError, lambda e: ({"error": str(e)}, 401))
 
-    repo = InMemoryRepository()
+    # Choose repository implementation based on configuration.
+    # If `SQLALCHEMY_DATABASE_URI` or `USE_SQLALCHEMY` is set, use the
+    # SQLAlchemy-backed repository. Table creation/initialization is NOT
+    # performed automatically here.
+    if app.config.get("USE_SQLALCHEMY") or app.config.get("SQLALCHEMY_DATABASE_URI"):
+        from ..persistence.sqlalchemy_repository import SQLAlchemyRepository
+        db_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "sqlite:///hbnb_dev.db")
+        repo = SQLAlchemyRepository(database_uri=db_uri)
+    else:
+        repo = InMemoryRepository()
     facade = HBNBFacade(repo)
 
     ns = Namespace("objects", description="Object operations")
