@@ -8,6 +8,14 @@ It provides the endpoints exercised by the test suite in `tests/test_api.py`.
 from __future__ import annotations
 
 from flask import Flask, request, jsonify
+from flask import current_app
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    verify_jwt_in_request,
+    get_jwt,
+    get_jwt_identity,
+)
 
 from ..business.facade import HBNBFacade, NotFoundError, ValidationError
 from ..persistence.in_memory_repository import InMemoryRepository
@@ -24,6 +32,11 @@ def create_app(config: object | dict | None = None):
     # Use in-memory repo by default for tests and simplicity
     repo = InMemoryRepository()
     facade = HBNBFacade(repo)
+
+    # Initialize JWT if requested in config
+    if app.config.get("ENABLE_AUTH"):
+        app.config.setdefault("JWT_SECRET_KEY", "change-me-in-prod")
+        JWTManager(app)
 
     def _sanitize_user(obj: dict) -> dict:
         out = dict(obj)
@@ -92,6 +105,39 @@ def create_app(config: object | dict | None = None):
         except ValidationError as e:
             return {"error": str(e)}, 400
         return _sanitize_user(obj), 201
+
+
+    @app.route("/api/v1/auth/login", methods=["POST"])
+    def login():
+        data = request.get_json() or {}
+        if not data.get("email") or not data.get("password"):
+            return {"error": "Missing credentials"}, 400
+        # find user by email
+        user = None
+        for u in facade.list("User"):
+            if u.get("email") == data.get("email"):
+                user = u
+                break
+        if not user:
+            return {"error": "Bad credentials"}, 401
+        # stored password may be hashed; use bcrypt
+        import bcrypt
+
+        stored = user.get("password")
+        if not stored or not isinstance(stored, str):
+            return {"error": "Bad credentials"}, 401
+        try:
+            if not bcrypt.checkpw(
+                data.get("password").encode("utf-8"), stored.encode("utf-8")
+            ):
+                return {"error": "Bad credentials"}, 401
+        except Exception:
+            return {"error": "Bad credentials"}, 401
+        # create token with is_admin claim
+        token = create_access_token(
+            identity=user.get("id"), additional_claims={"is_admin": user.get("is_admin", False)}
+        )
+        return {"access_token": token}, 200
 
     @app.route("/api/v1/users", methods=["GET"])
     def list_users():
