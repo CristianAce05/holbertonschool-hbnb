@@ -49,9 +49,9 @@ class HBNBFacade:
         model_cls = _MODEL_MAP.get(cls_name)
         if model_cls:
             inst = model_cls.from_dict(payload)
-            # Use dataclasses.asdict to include internal fields such as hashed
-            # password for storage. Presentation layer will sanitize returned
-            # objects.
+            # Use dataclasses.asdict to include internal fields (for example
+            # hashed password) when preparing storage data. Presentation
+            # layer will sanitize returned objects.
             try:
                 data = asdict(inst)
             except Exception:

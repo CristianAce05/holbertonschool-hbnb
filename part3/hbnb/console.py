@@ -4,13 +4,13 @@ Usage:
   python3 -m hbnb.console
 
 Commands:
-  create <ClassName> <json_payload?>   Create an instance, prints id
-  show <ClassName> <id>                Show instance JSON
-  destroy <ClassName> <id>             Delete instance
-  all [ClassName]                      List instances
-  update <ClassName> <id> <json|key=value>  Update instance
-  count <ClassName>                    Count instances
-  quit / EOF                           Exit
+    create <ClassName> <json_payload?>   Create an instance and print id
+    show <ClassName> <id>                Show instance JSON
+    destroy <ClassName> <id>             Delete instance
+    all [ClassName]                      List instances
+    update <ClassName> <id> <json|key=value>  Update instance
+    count <ClassName>                    Count instances
+    quit / EOF                           Exit
 """
 
 from __future__ import annotations

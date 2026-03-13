@@ -7,7 +7,6 @@ It provides the endpoints exercised by the test suite in `tests/test_api.py`.
 from __future__ import annotations
 
 from flask import Flask, request, jsonify
-from typing import Any, Dict
 
 from ..business.facade import HBNBFacade, NotFoundError, ValidationError
 from ..persistence.in_memory_repository import InMemoryRepository
@@ -25,16 +24,13 @@ def create_app(config: object | dict | None = None):
     repo = InMemoryRepository()
     facade = HBNBFacade(repo)
 
-
     def _sanitize_user(obj: dict) -> dict:
         out = dict(obj)
         out.pop("password", None)
         return out
 
-
     def _sanitize_amenity(obj: dict) -> dict:
         return dict(obj)
-
 
     def _sanitize_place(obj: dict) -> dict:
         out = dict(obj)
@@ -42,11 +38,15 @@ def create_app(config: object | dict | None = None):
         if owner_id:
             try:
                 owner = facade.get("User", owner_id)
-                out["owner"] = {"id": owner.get("id"), "email": owner.get("email")}
+                out["owner"] = {
+                    "id": owner.get("id"),
+                    "email": owner.get("email"),
+                }
             except Exception:
                 out["owner"] = {"id": owner_id}
         else:
             out["owner"] = None
+
         # attach amenities
         amenity_ids = out.get("amenity_ids") or []
         amenities = []
@@ -55,17 +55,20 @@ def create_app(config: object | dict | None = None):
                 a = facade.get("Amenity", aid)
                 amenities.append(a)
             except Exception:
-                continue
+                # ignore missing amenities
+                pass
         out["amenities"] = amenities
+
         # attach reviews
         try:
             all_reviews = facade.list("Review")
-            place_reviews = [r for r in all_reviews if r.get("place_id") == out.get("id")]
+            place_reviews = [
+                r for r in all_reviews if r.get("place_id") == out.get("id")
+            ]
         except Exception:
             place_reviews = []
         out["reviews"] = place_reviews
         return out
-
 
     # Users
     @app.route("/api/v1/users", methods=["POST"])
@@ -77,22 +80,22 @@ def create_app(config: object | dict | None = None):
             return {"error": "Missing email"}, 400
         if not payload.get("password"):
             return {"error": "Missing password"}, 400
+
         # ensure unique email
         for u in facade.list("User"):
             if u.get("email") == payload.get("email"):
                 return {"error": "email already exists"}, 400
+
         try:
             obj = facade.create("User", payload)
         except ValidationError as e:
             return {"error": str(e)}, 400
         return _sanitize_user(obj), 201
 
-
     @app.route("/api/v1/users", methods=["GET"])
     def list_users():
         items = facade.list("User")
         return jsonify([_sanitize_user(i) for i in items])
-
 
     @app.route("/api/v1/users/<string:obj_id>", methods=["GET", "PUT"])
     def user_item(obj_id: str):
@@ -102,6 +105,7 @@ def create_app(config: object | dict | None = None):
             except NotFoundError:
                 return {"error": "Not found"}, 404
             return _sanitize_user(obj)
+
         # PUT
         payload = request.get_json() or {}
         if not isinstance(payload, dict):
@@ -115,7 +119,6 @@ def create_app(config: object | dict | None = None):
         except ValidationError as e:
             return {"error": str(e)}, 400
         return _sanitize_user(obj)
-
 
     # Amenities
     @app.route("/api/v1/amenities", methods=["POST", "GET"])
@@ -133,7 +136,6 @@ def create_app(config: object | dict | None = None):
             return _sanitize_amenity(obj), 201
         items = facade.list("Amenity")
         return jsonify(items)
-
 
     @app.route("/api/v1/amenities/<string:obj_id>", methods=["GET", "PUT"])
     def amenity_item(obj_id: str):
@@ -155,7 +157,6 @@ def create_app(config: object | dict | None = None):
         except ValidationError as e:
             return {"error": str(e)}, 400
         return _sanitize_amenity(obj)
-
 
     # Places
     @app.route("/api/v1/places", methods=["POST", "GET"])
@@ -186,7 +187,6 @@ def create_app(config: object | dict | None = None):
         items = facade.list("Place")
         return jsonify([_sanitize_place(i) for i in items])
 
-
     @app.route("/api/v1/places/<string:obj_id>", methods=["GET", "PUT", "DELETE"])
     def place_item(obj_id: str):
         if request.method == "GET":
@@ -210,12 +210,11 @@ def create_app(config: object | dict | None = None):
             return _sanitize_place(obj)
         # DELETE
         try:
-            existing = facade.get("Place", obj_id)
+            facade.get("Place", obj_id)
         except NotFoundError:
             return {"error": "Not found"}, 404
         facade.delete("Place", obj_id)
         return ("", 204)
-
 
     # Reviews
     @app.route("/api/v1/reviews", methods=["POST", "GET"])
@@ -229,7 +228,7 @@ def create_app(config: object | dict | None = None):
             if not payload.get("text"):
                 return {"error": "Missing text"}, 400
             try:
-                place = facade.get("Place", payload.get("place_id"))
+                facade.get("Place", payload.get("place_id"))
             except Exception:
                 return {"error": "place_id not found"}, 400
             try:
@@ -239,7 +238,6 @@ def create_app(config: object | dict | None = None):
             return obj, 201
         items = facade.list("Review")
         return jsonify(items)
-
 
     @app.route("/api/v1/reviews/<string:obj_id>", methods=["GET", "PUT", "DELETE"])
     def review_item(obj_id: str):
@@ -264,12 +262,11 @@ def create_app(config: object | dict | None = None):
             return obj
         # DELETE
         try:
-            existing = facade.get("Review", obj_id)
+            facade.get("Review", obj_id)
         except NotFoundError:
             return {"error": "Not found"}, 404
         facade.delete("Review", obj_id)
         return ("", 204)
-
 
     @app.route("/health")
     def health():

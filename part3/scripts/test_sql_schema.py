@@ -32,9 +32,10 @@ for tbl in ("users", "places", "reviews", "amenities", "place_amenity"):
 print("Create a place by admin user...")
 cur.execute(
     (
-        "INSERT INTO places (id, name, description, number_rooms, number_bathrooms, "
-        "max_guest, price_by_night, latitude, longitude, user_id, created_at, "
-        "updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,datetime('now'),datetime('now'))"
+        "INSERT INTO places (id, name, description, number_rooms, "
+        "number_bathrooms, max_guest, price_by_night, latitude, "
+        "longitude, user_id, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?"
+        ",datetime('now'),datetime('now'))"
     ),
     (
         "place-1",
@@ -66,8 +67,8 @@ print("  amenities for place-1:", [r[0] for r in cur.fetchall()])
 print("Create a review by admin user...")
 cur.execute(
     (
-        "INSERT INTO reviews (id, user_id, place_id, text, created_at, updated_at) "
-        "VALUES (?,?,?,?,datetime('now'),datetime('now'))"
+        "INSERT INTO reviews (id, user_id, place_id, text, created_at, "
+        "updated_at) VALUES (?,?,?,?,datetime('now'),datetime('now'))"
     ),
     ("review-1", "user-admin-1", "place-1", "Great stay!"),
 )

@@ -22,7 +22,12 @@ class Place(BaseModel):
     amenity_ids: List[str] = field(default_factory=list)
 
     def __post_init__(self):
-        for attr in ("number_rooms", "number_bathrooms", "max_guest", "price_by_night"):
+        for attr in (
+            "number_rooms",
+            "number_bathrooms",
+            "max_guest",
+            "price_by_night",
+        ):
             val = getattr(self, attr)
             if not isinstance(val, int):
                 raise TypeError(f"{attr} must be int")
