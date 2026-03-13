@@ -1,0 +1,60 @@
+%% Mermaid ER diagram for holbertonschool-hbnb (part3)
+erDiagram
+    USERS {
+        TEXT id PK
+        TEXT email
+        TEXT password
+        TEXT first_name
+        TEXT last_name
+        INTEGER is_admin
+        TEXT created_at
+        TEXT updated_at
+    }
+
+    PLACES {
+        TEXT id PK
+        TEXT name
+        TEXT description
+        INTEGER number_rooms
+        INTEGER number_bathrooms
+        INTEGER max_guest
+        INTEGER price_by_night
+        REAL latitude
+        REAL longitude
+        TEXT user_id FK
+        TEXT created_at
+        TEXT updated_at
+    }
+
+    REVIEWS {
+        TEXT id PK
+        TEXT user_id FK
+        TEXT place_id FK
+        TEXT text
+        TEXT created_at
+        TEXT updated_at
+    }
+
+    AMENITIES {
+        TEXT id PK
+        TEXT name
+        TEXT created_at
+        TEXT updated_at
+    }
+
+    PLACE_AMENITY {
+        TEXT place_id FK
+        TEXT amenity_id FK
+    }
+
+    %% Relationships
+    USERS ||--o{ PLACES : "owns"
+    USERS ||--o{ REVIEWS : "writes"
+    PLACES ||--o{ REVIEWS : "has"
+    PLACES }o--o{ AMENITIES : "has"
+    PLACES ||--o{ PLACE_AMENITY : "links"
+    AMENITIES ||--o{ PLACE_AMENITY : "links"
+
+%% Notes
+%% - PK = primary key, FK = foreign key
+%% - Cascade rules: users -> places/reviews are ON DELETE CASCADE in schema
