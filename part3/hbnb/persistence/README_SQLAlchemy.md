@@ -32,6 +32,18 @@ When `create_app()` sees these settings it will instantiate
    initialization step (migration or explicit create) to avoid unintended
    schema creation during import or testing.
 
+   A safe option is to run the Flask CLI command that this project provides:
+
+   ```bash
+   # from project root
+   export FLASK_APP=hbnb
+   flask init-db --db sqlite:///dev.db
+   ```
+
+   This command calls `Base.metadata.create_all()` against the configured
+   database URI and is intended for development only. For production use
+   prefer a proper migration tool such as Alembic.
+
 4. After DB models are introduced, you can replace the generic JSON
    storage with full ORM mapping for each class. The repository interface
    remains the same, so the rest of the application should not need

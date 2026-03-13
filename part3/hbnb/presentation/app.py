@@ -31,12 +31,55 @@ def create_app(config: object | dict | None = None):
     # SQLAlchemy-backed repository. Table creation/initialization is NOT
     # performed automatically here.
     if app.config.get("USE_SQLALCHEMY") or app.config.get("SQLALCHEMY_DATABASE_URI"):
-        from ..persistence.sqlalchemy_repository import SQLAlchemyRepository
+        # assemble composite repository: a mapped UserRepository for users
+        # and the generic SQLAlchemyRepository for all other objects.
+        from ..persistence import SQLAlchemyRepository, UserRepository, CompositeRepository
         db_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "sqlite:///hbnb_dev.db")
-        repo = SQLAlchemyRepository(database_uri=db_uri)
+        generic = SQLAlchemyRepository(database_uri=db_uri)
+        user_repo = UserRepository(database_uri=db_uri)
+        # optional specific repos
+        from ..persistence import PlaceRepository, ReviewRepository, AmenityRepository
+        place_repo = PlaceRepository(database_uri=db_uri)
+        review_repo = ReviewRepository(database_uri=db_uri)
+        amenity_repo = AmenityRepository(database_uri=db_uri)
+        repo = CompositeRepository(
+            user_repo=user_repo,
+            generic_repo=generic,
+            place_repo=place_repo,
+            review_repo=review_repo,
+            amenity_repo=amenity_repo,
+        )
     else:
         repo = InMemoryRepository()
     facade = HBNBFacade(repo)
+
+    # CLI command to initialize DB schema from ORM models.
+    # This is an explicit, developer-invoked command to avoid automatic
+    # schema creation during imports or production runs.
+    try:
+        import click
+        from sqlalchemy import create_engine
+        from ..persistence.models import Base as ORMBase
+
+        @app.cli.command("init-db")
+        @click.option("--db", default=None, help="Database URI to initialize (overrides config)")
+        def init_db(db: str | None = None):
+            """Create database tables for SQLAlchemy models.
+
+            This command reads `SQLALCHEMY_DATABASE_URI` from app config unless
+            `--db` is provided. It calls `Base.metadata.create_all()` against
+            the engine created from that URI.
+            """
+            uri = db or app.config.get("SQLALCHEMY_DATABASE_URI")
+            if not uri:
+                click.echo("No database URI configured. Set SQLALCHEMY_DATABASE_URI or pass --db.")
+                raise SystemExit(1)
+            engine = create_engine(uri, future=True)
+            ORMBase.metadata.create_all(bind=engine)
+            click.echo(f"Initialized database schema at {uri}")
+    except Exception:
+        # If optional dependencies missing, do not prevent app creation.
+        pass
 
     ns = Namespace("objects", description="Object operations")
 
