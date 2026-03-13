@@ -7,8 +7,10 @@ from hbnb import create_app
 class AuthIntegrationTestCase(unittest.TestCase):
     def setUp(self):
         # Enable auth and provide a test secret via config
+        # use a >=32-byte secret for HMAC safety
+        long_secret = "A" * 40
         self.app = create_app(
-            {"TESTING": True, "ENABLE_AUTH": True, "JWT_SECRET_KEY": "test-secret"}
+            {"TESTING": True, "ENABLE_AUTH": True, "JWT_SECRET_KEY": long_secret}
         )
         self.client = self.app.test_client()
 

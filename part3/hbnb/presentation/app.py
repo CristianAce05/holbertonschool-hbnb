@@ -20,6 +20,8 @@ from flask_jwt_extended import (
 
 from ..business.facade import HBNBFacade, NotFoundError, ValidationError
 import click
+from alembic.config import Config as AlembicConfig
+from alembic import command as alembic_command
 from ..persistence.in_memory_repository import InMemoryRepository
 
 
@@ -43,6 +45,12 @@ def create_app(config: object | dict | None = None):
             raise RuntimeError(
                 "ENABLE_AUTH is True but JWT_SECRET_KEY is not set. "
                 "Set app.config['JWT_SECRET_KEY'] or the environment variable JWT_SECRET_KEY."
+            )
+        # enforce minimum key length in bytes (HMAC SHA256 recommended >=32 bytes)
+        if len(key.encode("utf-8")) < 32:
+            raise RuntimeError(
+                "JWT_SECRET_KEY is too short; must be at least 32 bytes. "
+                "Set a longer secret via app.config['JWT_SECRET_KEY'] or the environment."
             )
         app.config["JWT_SECRET_KEY"] = key
         JWTManager(app)
@@ -142,6 +150,51 @@ def create_app(config: object | dict | None = None):
             pass
 
         print(f"Initialized database: {uri}")
+
+    # Alembic `flask db` wrapper
+    @app.cli.group("db")
+    def db_cmd():
+        """Alembic database migration commands."""
+
+    def _alembic_config():
+        # locate alembic.ini in project root
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        cfg_path = os.path.join(project_root, "alembic.ini")
+        cfg = AlembicConfig(cfg_path)
+        # prefer an explicit SQLALCHEMY_DATABASE_URI in app config
+        uri = app.config.get("SQLALCHEMY_DATABASE_URI") or os.environ.get("SQLALCHEMY_DATABASE_URI")
+        if uri:
+            cfg.set_main_option("sqlalchemy.url", uri)
+        return cfg
+
+    @db_cmd.command("upgrade")
+    @click.option("--rev", default="head", help="Revision to upgrade to (default: head)")
+    def db_upgrade(rev: str):
+        """Run Alembic upgrade."""
+        cfg = _alembic_config()
+        alembic_command.upgrade(cfg, rev)
+
+    @db_cmd.command("downgrade")
+    @click.argument("rev")
+    def db_downgrade(rev: str):
+        """Run Alembic downgrade to a given revision (e.g. -1 or base)."""
+        cfg = _alembic_config()
+        alembic_command.downgrade(cfg, rev)
+
+    @db_cmd.command("revision")
+    @click.option("-m", "--message", required=True, help="Revision message")
+    @click.option("--autogenerate", is_flag=True, help="Autogenerate migration from models")
+    def db_revision(message: str, autogenerate: bool):
+        """Create a new Alembic revision."""
+        cfg = _alembic_config()
+        alembic_command.revision(cfg, message=message, autogenerate=autogenerate)
+
+    @db_cmd.command("stamp")
+    @click.argument("rev")
+    def db_stamp(rev: str):
+        """Stamp the database with a revision without running migrations."""
+        cfg = _alembic_config()
+        alembic_command.stamp(cfg, rev)
 
     # Users
     @app.route("/api/v1/users", methods=["POST"])

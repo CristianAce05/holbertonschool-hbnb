@@ -43,6 +43,37 @@ Or enable in test/dev config when creating the app:
 
 ```py
 from hbnb import create_app
-app = create_app({"ENABLE_AUTH": True, "JWT_SECRET_KEY": "test-secret"})
+long_secret = "A" * 40
+app = create_app({"ENABLE_AUTH": True, "JWT_SECRET_KEY": long_secret})
 ```
+
+Security note: the application now enforces a minimum secret length of 32 bytes
+for `JWT_SECRET_KEY` (HMAC SHA256 recommendation). When enabling auth in
+production provide a cryptographically strong secret (store it in CI/hosting
+secrets and do not commit it to the repository).
+
+Database migrations
+-------------------
+
+This project includes Alembic for migrations. You can manage migrations via the
+Flask CLI shims provided by the application. Examples:
+
+```bash
+# Upgrade to latest
+export FLASK_APP=hbnb
+flask db upgrade
+
+# Create an autogenerate revision (inspect models)
+flask db revision -m "add users table" --autogenerate
+
+# Stamp DB at a specific revision without running migrations
+flask db stamp head
+
+# Downgrade
+flask db downgrade -1
+```
+
+By default the Alembic config uses `SQLALCHEMY_DATABASE_URI` from environment
+or `alembic.ini`. You can pass a different URI by setting the
+`SQLALCHEMY_DATABASE_URI` env var or `app.config` before running commands.
 

@@ -23,6 +23,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -e .
+      - name: Ensure JWT secret for ENABLE_AUTH tests
+        run: |
+          # Use repository secret when provided; otherwise set a strong default for CI only
+          if [ -n "${{ secrets.JWT_SECRET_KEY }}" ]; then
+            echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> $GITHUB_ENV
+          else
+            echo "JWT_SECRET_KEY=ci-default-secret-aaaaaaaaaaaaaaaaaaaaaaaa" >> $GITHUB_ENV
+          fi
       - name: Black check
         run: python -m black --check .
       - name: Lint (flake8)
