@@ -84,6 +84,21 @@ def create_app(config: object | dict | None = None):
         out["reviews"] = place_reviews
         return out
 
+    def _ensure_auth_allowed():
+        """Verify JWT when `ENABLE_AUTH` is set; otherwise no-op."""
+        if current_app.config.get("ENABLE_AUTH"):
+            verify_jwt_in_request()
+
+    def _is_admin_claim() -> bool:
+        if not current_app.config.get("ENABLE_AUTH"):
+            return False
+        return bool(get_jwt().get("is_admin", False))
+
+    def _current_identity() -> str | None:
+        if not current_app.config.get("ENABLE_AUTH"):
+            return None
+        return get_jwt_identity()
+
     # Users
     @app.route("/api/v1/users", methods=["POST"])
     def create_user():
@@ -105,7 +120,6 @@ def create_app(config: object | dict | None = None):
         except ValidationError as e:
             return {"error": str(e)}, 400
         return _sanitize_user(obj), 201
-
 
     @app.route("/api/v1/auth/login", methods=["POST"])
     def login():
@@ -135,7 +149,8 @@ def create_app(config: object | dict | None = None):
             return {"error": "Bad credentials"}, 401
         # create token with is_admin claim
         token = create_access_token(
-            identity=user.get("id"), additional_claims={"is_admin": user.get("is_admin", False)}
+            identity=user.get("id"),
+            additional_claims={"is_admin": user.get("is_admin", False)},
         )
         return {"access_token": token}, 200
 
@@ -159,6 +174,16 @@ def create_app(config: object | dict | None = None):
             return {"error": "Invalid payload"}, 400
         for forbidden in ("id", "created_at"):
             payload.pop(forbidden, None)
+        # enforce auth: only the user themselves or admin may update
+        if current_app.config.get("ENABLE_AUTH"):
+            try:
+                verify_jwt_in_request()
+            except Exception:
+                return {"error": "Missing or invalid token"}, 401
+            identity = get_jwt_identity()
+            is_admin = bool(get_jwt().get("is_admin", False))
+            if not is_admin and identity != obj_id:
+                return {"error": "Forbidden"}, 403
         try:
             obj = facade.update("User", obj_id, payload)
         except NotFoundError:
@@ -212,6 +237,16 @@ def create_app(config: object | dict | None = None):
             payload = request.get_json() or {}
             if not isinstance(payload, dict):
                 return {"error": "Invalid payload"}, 400
+            # enforce auth: creator must be authenticated and owner (or admin)
+            if current_app.config.get("ENABLE_AUTH"):
+                try:
+                    verify_jwt_in_request()
+                except Exception:
+                    return {"error": "Missing or invalid token"}, 401
+                identity = get_jwt_identity()
+                is_admin = bool(get_jwt().get("is_admin", False))
+                if not is_admin and identity != payload.get("user_id"):
+                    return {"error": "Forbidden"}, 403
             if not payload.get("user_id"):
                 return {"error": "Missing user_id"}, 400
             if not payload.get("name"):
@@ -248,6 +283,20 @@ def create_app(config: object | dict | None = None):
                 return {"error": "Invalid payload"}, 400
             for forbidden in ("id", "created_at"):
                 payload.pop(forbidden, None)
+            # enforce auth: only owner or admin may update
+            if current_app.config.get("ENABLE_AUTH"):
+                try:
+                    verify_jwt_in_request()
+                except Exception:
+                    return {"error": "Missing or invalid token"}, 401
+                identity = get_jwt_identity()
+                is_admin = bool(get_jwt().get("is_admin", False))
+                try:
+                    existing = facade.get("Place", obj_id)
+                except NotFoundError:
+                    return {"error": "Not found"}, 404
+                if not is_admin and existing.get("user_id") != identity:
+                    return {"error": "Forbidden"}, 403
             try:
                 obj = facade.update("Place", obj_id, payload)
             except NotFoundError:
@@ -256,6 +305,20 @@ def create_app(config: object | dict | None = None):
                 return {"error": str(e)}, 400
             return _sanitize_place(obj)
         # DELETE
+        # DELETE: only owner or admin
+        if current_app.config.get("ENABLE_AUTH"):
+            try:
+                verify_jwt_in_request()
+            except Exception:
+                return {"error": "Missing or invalid token"}, 401
+            identity = get_jwt_identity()
+            is_admin = bool(get_jwt().get("is_admin", False))
+            try:
+                existing = facade.get("Place", obj_id)
+            except NotFoundError:
+                return {"error": "Not found"}, 404
+            if not is_admin and existing.get("user_id") != identity:
+                return {"error": "Forbidden"}, 403
         try:
             facade.get("Place", obj_id)
         except NotFoundError:
@@ -278,6 +341,16 @@ def create_app(config: object | dict | None = None):
                 facade.get("Place", payload.get("place_id"))
             except Exception:
                 return {"error": "place_id not found"}, 400
+            # enforce auth: creator must be authenticated and owner (or admin)
+            if current_app.config.get("ENABLE_AUTH"):
+                try:
+                    verify_jwt_in_request()
+                except Exception:
+                    return {"error": "Missing or invalid token"}, 401
+                identity = get_jwt_identity()
+                is_admin = bool(get_jwt().get("is_admin", False))
+                if not is_admin and identity != payload.get("user_id"):
+                    return {"error": "Forbidden"}, 403
             try:
                 obj = facade.create("Review", payload)
             except ValidationError as e:
@@ -300,6 +373,20 @@ def create_app(config: object | dict | None = None):
                 return {"error": "Invalid payload"}, 400
             for forbidden in ("id", "created_at", "user_id", "place_id"):
                 payload.pop(forbidden, None)
+            # enforce auth: only review owner or admin may update
+            if current_app.config.get("ENABLE_AUTH"):
+                try:
+                    verify_jwt_in_request()
+                except Exception:
+                    return {"error": "Missing or invalid token"}, 401
+                identity = get_jwt_identity()
+                is_admin = bool(get_jwt().get("is_admin", False))
+                try:
+                    existing = facade.get("Review", obj_id)
+                except NotFoundError:
+                    return {"error": "Not found"}, 404
+                if not is_admin and existing.get("user_id") != identity:
+                    return {"error": "Forbidden"}, 403
             try:
                 obj = facade.update("Review", obj_id, payload)
             except NotFoundError:
@@ -308,6 +395,20 @@ def create_app(config: object | dict | None = None):
                 return {"error": str(e)}, 400
             return obj
         # DELETE
+        # DELETE: only owner or admin
+        if current_app.config.get("ENABLE_AUTH"):
+            try:
+                verify_jwt_in_request()
+            except Exception:
+                return {"error": "Missing or invalid token"}, 401
+            identity = get_jwt_identity()
+            is_admin = bool(get_jwt().get("is_admin", False))
+            try:
+                existing = facade.get("Review", obj_id)
+            except NotFoundError:
+                return {"error": "Not found"}, 404
+            if not is_admin and existing.get("user_id") != identity:
+                return {"error": "Forbidden"}, 403
         try:
             facade.get("Review", obj_id)
         except NotFoundError:
