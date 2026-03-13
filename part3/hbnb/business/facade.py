@@ -4,6 +4,7 @@ This facade uses the concrete business models when available to validate
 create/update payloads while keeping repository storage decoupled.
 """
 from typing import Any, Dict, List, Optional
+from dataclasses import asdict
 
 from .models import User, Place, Review, Amenity
 
@@ -47,7 +48,13 @@ class HBNBFacade:
         model_cls = _MODEL_MAP.get(cls_name)
         if model_cls:
             inst = model_cls.from_dict(payload)
-            data = inst.to_dict()
+            # Use dataclasses.asdict to include internal fields such as hashed
+            # password for storage. Presentation layer will sanitize returned
+            # objects.
+            try:
+                data = asdict(inst)
+            except Exception:
+                data = inst.to_dict()
         else:
             data = payload
         return self._repo.create(cls_name, data)
@@ -77,7 +84,10 @@ class HBNBFacade:
                 raise NotFoundError(f"{cls_name} {obj_id} not found")
             inst = model_cls.from_dict(existing)
             inst.update_from_dict(updates)
-            validated = inst.to_dict()
+            try:
+                validated = asdict(inst)
+            except Exception:
+                validated = inst.to_dict()
             obj = self._repo.update(cls_name, obj_id, validated)
         else:
             obj = self._repo.update(cls_name, obj_id, updates)

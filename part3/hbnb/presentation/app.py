@@ -1,6 +1,9 @@
 """Flask application factory and simple REST endpoints for Part 2."""
 from flask import Flask, request, jsonify
 from flask_restx import Api, Namespace, Resource, fields
+import bcrypt
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, verify_jwt_in_request
+from flask_jwt_extended.exceptions import JWTExtendedException, NoAuthorizationError
 
 from ..business.facade import HBNBFacade, NotFoundError, ValidationError
 from ..persistence.in_memory_repository import InMemoryRepository
@@ -16,6 +19,12 @@ def create_app(config: object | dict | None = None):
             app.config.from_object(config)
 
     api = Api(app, version="0.1", title="HBNB API", doc="/docs")
+    # JWT setup: ensure a secret key exists
+    app.config.setdefault("JWT_SECRET_KEY", app.config.get("JWT_SECRET_KEY", "change-me-in-production"))
+    jwt = JWTManager(app)
+    # return JSON 401 for JWT errors instead of HTML 500
+    app.register_error_handler(JWTExtendedException, lambda e: ({"error": str(e)}, 401))
+    app.register_error_handler(NoAuthorizationError, lambda e: ({"error": str(e)}, 401))
 
     repo = InMemoryRepository()
     facade = HBNBFacade(repo)
@@ -66,6 +75,45 @@ def create_app(config: object | dict | None = None):
         out.pop("password", None)
         return out
 
+    # Authentication namespace
+    auth_ns = Namespace("auth", description="Authentication")
+    auth_model = api.model("Auth", {"email": fields.String(required=True), "password": fields.String(required=True)})
+
+
+    @auth_ns.route("/login")
+    class Login(Resource):
+        @auth_ns.expect(auth_model, validate=False)
+        def post(self):
+            payload = request.json or {}
+            if not isinstance(payload, dict):
+                return {"error": "Invalid payload"}, 400
+            email = payload.get("email")
+            password = payload.get("password")
+            if not email or not password:
+                return {"error": "Missing credentials"}, 400
+            # find user by email
+            users = facade.list("User")
+            matched = None
+            for u in users:
+                if u.get("email") == email:
+                    matched = u
+                    break
+            if not matched:
+                return {"error": "Bad credentials"}, 401
+            stored = matched.get("password")
+            if not stored:
+                return {"error": "Bad credentials"}, 401
+            try:
+                ok = bcrypt.checkpw(password.encode("utf-8"), stored.encode("utf-8"))
+            except Exception:
+                ok = False
+            if not ok:
+                return {"error": "Bad credentials"}, 401
+            access = create_access_token(identity=matched.get("id"), additional_claims={"email": matched.get("email")})
+            return {"access_token": access}, 200
+
+    api.add_namespace(auth_ns, path="/api/v1/auth")
+
 
     @users_ns.route("")
     class UsersList(Resource):
@@ -86,6 +134,10 @@ def create_app(config: object | dict | None = None):
             return _sanitize_user(obj), 201
 
         def get(self):
+            try:
+                verify_jwt_in_request()
+            except Exception as e:
+                return {"error": str(e)}, 401
             items = facade.list("User")
             return jsonify([_sanitize_user(i) for i in items])
 
@@ -93,6 +145,10 @@ def create_app(config: object | dict | None = None):
     @users_ns.route("/<string:obj_id>")
     class UsersItem(Resource):
         def get(self, obj_id):
+            try:
+                verify_jwt_in_request()
+            except Exception as e:
+                return {"error": str(e)}, 401
             try:
                 obj = facade.get("User", obj_id)
             except NotFoundError:
@@ -104,8 +160,19 @@ def create_app(config: object | dict | None = None):
             payload = request.json or {}
             if not isinstance(payload, dict):
                 return {"error": "Invalid payload"}, 400
+            try:
+                verify_jwt_in_request()
+            except Exception as e:
+                return {"error": str(e)}, 401
+            # only the user themselves can update their data
+            cur_id = get_jwt_identity()
+            if cur_id != obj_id:
+                return {"error": "Forbidden"}, 403
             # prevent updating immutable fields
             for forbidden in ("id", "created_at"):
+                payload.pop(forbidden, None)
+            # disallow changing email and password via this endpoint
+            for forbidden in ("email", "password"):
                 payload.pop(forbidden, None)
             try:
                 obj = facade.update("User", obj_id, payload)
@@ -227,6 +294,13 @@ def create_app(config: object | dict | None = None):
             payload = request.json or {}
             if not isinstance(payload, dict):
                 return {"error": "Invalid payload"}, 400
+            try:
+                verify_jwt_in_request()
+            except Exception as e:
+                return {"error": str(e)}, 401
+            # force owner to be the authenticated user
+            user_id = get_jwt_identity()
+            payload["user_id"] = user_id
             # validation
             if not payload.get("name"):
                 return {"error": "Missing name"}, 400
@@ -246,10 +320,7 @@ def create_app(config: object | dict | None = None):
                     float(payload["longitude"])
                 except Exception:
                     return {"error": "longitude must be float"}, 400
-            # user_id is required and must reference an existing User
-            user_id = payload.get("user_id")
-            if not user_id:
-                return {"error": "Missing user_id"}, 400
+            # user_id must reference an existing User
             try:
                 facade.get("User", user_id)
             except Exception:
@@ -279,6 +350,18 @@ def create_app(config: object | dict | None = None):
             payload = request.json or {}
             if not isinstance(payload, dict):
                 return {"error": "Invalid payload"}, 400
+            try:
+                verify_jwt_in_request()
+            except Exception as e:
+                return {"error": str(e)}, 401
+            cur_id = get_jwt_identity()
+            # ensure owner
+            try:
+                existing = facade.get("Place", obj_id)
+            except NotFoundError:
+                return {"error": "Not found"}, 404
+            if existing.get("user_id") != cur_id:
+                return {"error": "Forbidden"}, 403
             for forbidden in ("id", "created_at"):
                 payload.pop(forbidden, None)
             if "price_by_night" in payload:
@@ -297,12 +380,8 @@ def create_app(config: object | dict | None = None):
                     float(payload["longitude"])
                 except Exception:
                     return {"error": "longitude must be float"}, 400
-            # owner validation
-            if "user_id" in payload and payload["user_id"]:
-                try:
-                    facade.get("User", payload["user_id"])
-                except Exception:
-                    return {"error": "user_id not found"}, 400
+            # disallow changing owner
+            payload.pop("user_id", None)
             try:
                 obj = facade.update("Place", obj_id, payload)
             except NotFoundError:
@@ -310,6 +389,21 @@ def create_app(config: object | dict | None = None):
             except ValidationError as e:
                 return {"error": str(e)}, 400
             return _sanitize_place(obj)
+
+        def delete(self, obj_id):
+            try:
+                verify_jwt_in_request()
+            except Exception as e:
+                return {"error": str(e)}, 401
+            cur_id = get_jwt_identity()
+            try:
+                existing = facade.get("Place", obj_id)
+            except NotFoundError:
+                return {"error": "Not found"}, 404
+            if existing.get("user_id") != cur_id:
+                return {"error": "Forbidden"}, 403
+            facade.delete("Place", obj_id)
+            return ("", 204)
 
     api.add_namespace(places_ns, path="/api/v1/places")
 
@@ -330,21 +424,34 @@ def create_app(config: object | dict | None = None):
             payload = request.json or {}
             if not isinstance(payload, dict):
                 return {"error": "Invalid payload"}, 400
-            if not payload.get("user_id"):
-                return {"error": "Missing user_id"}, 400
+            try:
+                verify_jwt_in_request()
+            except Exception as e:
+                return {"error": str(e)}, 401
+            user_id = get_jwt_identity()
+            # require place_id and text
             if not payload.get("place_id"):
                 return {"error": "Missing place_id"}, 400
             if not payload.get("text"):
                 return {"error": "Missing text"}, 400
-            # verify user and place exist
+            # ensure place exists
             try:
-                facade.get("User", payload.get("user_id"))
-            except Exception:
-                return {"error": "user_id not found"}, 400
-            try:
-                facade.get("Place", payload.get("place_id"))
+                place = facade.get("Place", payload.get("place_id"))
             except Exception:
                 return {"error": "place_id not found"}, 400
+            # prevent reviewing own place
+            if place.get("user_id") == user_id:
+                return {"error": "Cannot review your own place"}, 400
+            # prevent duplicate reviews by same user on same place
+            try:
+                all_reviews = facade.list("Review")
+            except Exception:
+                all_reviews = []
+            for r in all_reviews:
+                if r.get("user_id") == user_id and r.get("place_id") == payload.get("place_id"):
+                    return {"error": "Review already exists"}, 400
+            # set authenticated user as author
+            payload["user_id"] = user_id
             try:
                 obj = facade.create("Review", payload)
             except ValidationError as e:
@@ -370,6 +477,18 @@ def create_app(config: object | dict | None = None):
             payload = request.json or {}
             if not isinstance(payload, dict):
                 return {"error": "Invalid payload"}, 400
+            try:
+                verify_jwt_in_request()
+            except Exception as e:
+                return {"error": str(e)}, 401
+            cur_id = get_jwt_identity()
+            # ensure review exists and ownership
+            try:
+                existing = facade.get("Review", obj_id)
+            except NotFoundError:
+                return {"error": "Not found"}, 404
+            if existing.get("user_id") != cur_id:
+                return {"error": "Forbidden"}, 403
             # prevent changing relational keys
             for forbidden in ("id", "created_at", "user_id", "place_id"):
                 payload.pop(forbidden, None)
@@ -385,9 +504,17 @@ def create_app(config: object | dict | None = None):
 
         def delete(self, obj_id):
             try:
-                facade.delete("Review", obj_id)
+                verify_jwt_in_request()
+            except Exception as e:
+                return {"error": str(e)}, 401
+            cur_id = get_jwt_identity()
+            try:
+                existing = facade.get("Review", obj_id)
             except NotFoundError:
                 return {"error": "Not found"}, 404
+            if existing.get("user_id") != cur_id:
+                return {"error": "Forbidden"}, 403
+            facade.delete("Review", obj_id)
             return ("", 204)
 
     api.add_namespace(reviews_ns, path="/api/v1/reviews")

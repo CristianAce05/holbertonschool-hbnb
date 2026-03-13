@@ -39,3 +39,12 @@ class User(BaseModel):
         d = super().to_dict()
         d.pop("password", None)
         return d
+
+    def update_from_dict(self, updates: Dict[str, Any]) -> None:
+        # Ensure password is hashed when updated
+        pwd = updates.get("password")
+        if isinstance(pwd, str) and pwd:
+            hashed = bcrypt.hashpw(pwd.encode("utf-8"), bcrypt.gensalt())
+            updates = dict(updates)
+            updates["password"] = hashed.decode("utf-8")
+        super().update_from_dict(updates)
