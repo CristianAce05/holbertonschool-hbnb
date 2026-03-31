@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HBNB | Discover Stays</title>
+    <meta name="api-base-url" content="http://127.0.0.1:5000/api/v1">
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,13 +18,13 @@
                 <img src="logo.png" alt="HBNB logo" class="logo">
                 <span class="brand-name">HBNB</span>
             </a>
-            <a href="login.html" class="login-button">Log In</a>
+            <a href="login.html" class="login-button" id="login-button">Log In</a>
         </div>
         <nav class="main-nav" aria-label="Primary navigation">
             <a href="index.html" aria-current="page">Places</a>
             <a href="place.html">Place Details</a>
             <a href="add_review.html">Add Review</a>
-            <a href="login.html">Login</a>
+            <a href="login.html" id="login-link">Login</a>
         </nav>
     </header>
 
@@ -43,46 +44,29 @@
 
         <section class="section-shell" aria-labelledby="places-heading">
             <div class="section-heading">
-                <h2 id="places-heading">Available Places</h2>
-                <p>Three sample listings laid out as responsive cards.</p>
+                <div>
+                    <h2 id="places-heading">Available Places</h2>
+                    <p>Browse all places returned by the API and filter them by nightly price.</p>
+                </div>
+                <div class="filter-panel">
+                    <label for="price-filter">Max price</label>
+                    <select id="price-filter" name="price-filter">
+                        <option value="10">10</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="all" selected>All</option>
+                    </select>
+                </div>
             </div>
 
-            <div class="places-grid">
-                <article class="place-card">
-                    <div class="card-media media-loft" aria-hidden="true"></div>
-                    <div class="card-content">
-                        <h3>Harbor Loft</h3>
-                        <p class="price-tag">$145 / night</p>
-                        <p>Light-filled loft with a reading nook, skyline terrace, and walkable waterfront access.</p>
-                        <a href="place.html" class="details-button">View Details</a>
-                    </div>
-                </article>
-
-                <article class="place-card">
-                    <div class="card-media media-courtyard" aria-hidden="true"></div>
-                    <div class="card-content">
-                        <h3>Courtyard Studio</h3>
-                        <p class="price-tag">$98 / night</p>
-                        <p>Compact studio designed for one or two guests, wrapped around a planted internal garden.</p>
-                        <a href="place.html" class="details-button">View Details</a>
-                    </div>
-                </article>
-
-                <article class="place-card">
-                    <div class="card-media media-cliff" aria-hidden="true"></div>
-                    <div class="card-content">
-                        <h3>Cliffside Retreat</h3>
-                        <p class="price-tag">$210 / night</p>
-                        <p>Expansive coastal stay with a private deck, breakfast service, and sunset views.</p>
-                        <a href="place.html" class="details-button">View Details</a>
-                    </div>
-                </article>
-            </div>
+            <p id="places-feedback" class="form-feedback" aria-live="polite">Loading places...</p>
+            <div class="places-grid" id="places-list"></div>
         </section>
     </main>
 
     <footer class="site-footer">
         <p>All rights reserved.</p>
     </footer>
+    <script src="scripts.js"></script>
 </body>
 </html>
