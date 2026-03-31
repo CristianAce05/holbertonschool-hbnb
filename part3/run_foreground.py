@@ -9,6 +9,7 @@ import sys
 import argparse
 import os
 from hbnb import create_app
+from hbnb.demo_seed import seed_demo_data
 
 
 def _get_container_ips():
@@ -50,6 +51,13 @@ def _build_app_config() -> dict:
     return config
 
 
+def _should_seed_demo_data() -> bool:
+    raw = os.environ.get("SEED_DEMO_DATA")
+    if raw is None:
+        return True
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Run HBnB dev server with helpful launcher messages"
@@ -59,6 +67,15 @@ def main():
     )
     args = parser.parse_args()
     app = create_app(_build_app_config())
+    if _should_seed_demo_data():
+        result = seed_demo_data(app)
+        place = result.get("place") or {}
+        credentials = result.get("credentials") or {}
+        print(
+            "Demo data ready: "
+            f"{credentials.get('email')} / {credentials.get('password')} "
+            f"(place id: {place.get('id', 'n/a')})"
+        )
     port = args.port
     ips = _get_container_ips()
     print("Starting HBnB dev server")

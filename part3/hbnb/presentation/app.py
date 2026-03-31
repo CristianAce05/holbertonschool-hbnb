@@ -71,6 +71,7 @@ def create_app(config: object | dict | None = None):
     # Use in-memory repo by default for tests and simplicity
     repo = InMemoryRepository()
     facade = HBNBFacade(repo)
+    app.extensions["hbnb_facade"] = facade
 
     # Initialize JWT if requested in config
     if app.config.get("ENABLE_AUTH"):
