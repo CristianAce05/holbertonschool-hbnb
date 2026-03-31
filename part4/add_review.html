@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HBNB | Add Review</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="brand-bar">
+            <a href="index.html" class="brand-link" aria-label="HBNB home page">
+                <img src="logo.png" alt="HBNB logo" class="logo">
+                <span class="brand-name">HBNB</span>
+            </a>
+            <a href="login.html" class="login-button">Log In</a>
+        </div>
+        <nav class="main-nav" aria-label="Primary navigation">
+            <a href="index.html">Places</a>
+            <a href="place.html">Place Details</a>
+            <a href="add_review.html" aria-current="page">Add Review</a>
+            <a href="login.html">Login</a>
+        </nav>
+    </header>
+
+    <main class="review-layout">
+        <section class="add-review" aria-labelledby="review-form-heading">
+            <p class="eyebrow">Authenticated area</p>
+            <h1 id="review-form-heading">Add your review for Harbor Loft.</h1>
+            <p class="supporting-copy">This page is intended for logged-in users. The static mockup keeps the review form visible to reflect that authenticated state.</p>
+
+            <form class="form" action="#" method="post">
+                <label for="place">Place</label>
+                <select id="place" name="place" required>
+                    <option value="">Select a place</option>
+                    <option value="harbor-loft">Harbor Loft</option>
+                    <option value="courtyard-studio">Courtyard Studio</option>
+                    <option value="cliffside-retreat">Cliffside Retreat</option>
+                </select>
+
+                <label for="rating">Rating</label>
+                <select id="rating" name="rating" required>
+                    <option value="">Choose a rating</option>
+                    <option value="5">5 - Excellent</option>
+                    <option value="4">4 - Very Good</option>
+                    <option value="3">3 - Good</option>
+                    <option value="2">2 - Fair</option>
+                    <option value="1">1 - Poor</option>
+                </select>
+
+                <label for="review">Review</label>
+                <textarea id="review" name="review" rows="6" placeholder="Describe the stay, the host, and the details that mattered most." required></textarea>
+
+                <button type="submit" class="details-button submit-button">Submit Review</button>
+            </form>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>All rights reserved.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HBNB | Discover Stays</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="brand-bar">
+            <a href="index.html" class="brand-link" aria-label="HBNB home page">
+                <img src="logo.png" alt="HBNB logo" class="logo">
+                <span class="brand-name">HBNB</span>
+            </a>
+            <a href="login.html" class="login-button">Log In</a>
+        </div>
+        <nav class="main-nav" aria-label="Primary navigation">
+            <a href="index.html" aria-current="page">Places</a>
+            <a href="place.html">Place Details</a>
+            <a href="add_review.html">Add Review</a>
+            <a href="login.html">Login</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero-section">
+            <div>
+                <p class="eyebrow">Curated stays for focused travelers</p>
+                <h1>Find a place with character, comfort, and clear pricing.</h1>
+                <p class="hero-copy">Browse a small collection of designed spaces, from rooftop lofts to quiet courtyard apartments.</p>
+            </div>
+            <aside class="hero-panel" aria-label="Highlights">
+                <p>Hand-picked hosts</p>
+                <p>Transparent nightly rates</p>
+                <p>Simple booking flow</p>
+            </aside>
+        </section>
+
+        <section class="section-shell" aria-labelledby="places-heading">
+            <div class="section-heading">
+                <h2 id="places-heading">Available Places</h2>
+                <p>Three sample listings laid out as responsive cards.</p>
+            </div>
+
+            <div class="places-grid">
+                <article class="place-card">
+                    <div class="card-media media-loft" aria-hidden="true"></div>
+                    <div class="card-content">
+                        <h3>Harbor Loft</h3>
+                        <p class="price-tag">$145 / night</p>
+                        <p>Light-filled loft with a reading nook, skyline terrace, and walkable waterfront access.</p>
+                        <a href="place.html" class="details-button">View Details</a>
+                    </div>
+                </article>
+
+                <article class="place-card">
+                    <div class="card-media media-courtyard" aria-hidden="true"></div>
+                    <div class="card-content">
+                        <h3>Courtyard Studio</h3>
+                        <p class="price-tag">$98 / night</p>
+                        <p>Compact studio designed for one or two guests, wrapped around a planted internal garden.</p>
+                        <a href="place.html" class="details-button">View Details</a>
+                    </div>
+                </article>
+
+                <article class="place-card">
+                    <div class="card-media media-cliff" aria-hidden="true"></div>
+                    <div class="card-content">
+                        <h3>Cliffside Retreat</h3>
+                        <p class="price-tag">$210 / night</p>
+                        <p>Expansive coastal stay with a private deck, breakfast service, and sunset views.</p>
+                        <a href="place.html" class="details-button">View Details</a>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>All rights reserved.</p>
+    </footer>
+</body>
+</html>
