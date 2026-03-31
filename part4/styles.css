@@ -348,6 +348,26 @@ button {
     gap: 14px;
 }
 
+.form-feedback {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid transparent;
+    font-weight: 500;
+}
+
+.form-feedback.is-error {
+    border-color: rgba(163, 45, 31, 0.18);
+    background: rgba(214, 72, 48, 0.1);
+    color: #8a2718;
+}
+
+.form-feedback.is-success {
+    border-color: rgba(40, 110, 78, 0.18);
+    background: rgba(60, 140, 102, 0.1);
+    color: #215f45;
+}
+
 .form label {
     font-weight: 700;
 }
@@ -378,6 +398,13 @@ button {
 .submit-button {
     justify-self: start;
     margin-top: 8px;
+}
+
+.submit-button[disabled] {
+    cursor: wait;
+    opacity: 0.72;
+    transform: none;
+    box-shadow: none;
 }
 
 .site-footer {
