@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
     const placesList = document.getElementById('places-list');
     const placeDetails = document.getElementById('place-details');
+    const reviewForm = document.getElementById('review-form');
 
     if (loginForm) {
         setupLoginForm(loginForm);
@@ -13,6 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (placeDetails) {
         setupPlacePage();
+    }
+
+    if (reviewForm) {
+        setupReviewPage(reviewForm);
     }
 });
 
@@ -145,6 +150,82 @@ async function setupPlacePage() {
     }
 }
 
+async function setupReviewPage(reviewForm) {
+    const token = requireAuthentication();
+    const placeId = getPlaceIdFromURL();
+    const feedback = document.getElementById('review-feedback');
+    const placeSelect = document.getElementById('place');
+    const reviewHeading = document.getElementById('review-form-heading');
+    const supportingCopy = document.getElementById('review-supporting-copy');
+    const submitButton = document.getElementById('review-submit');
+    const reviewInput = document.getElementById('review');
+
+    toggleLoginVisibility(true);
+
+    if (!placeId) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    const userId = getUserIdFromToken(token);
+    if (!userId) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    try {
+        const place = await fetchPlaceDetails(token, placeId);
+        populateReviewPlaceField(placeSelect, place);
+        if (reviewHeading) {
+            reviewHeading.textContent = `Add your review for ${place.name || 'this place'}.`;
+        }
+        if (supportingCopy) {
+            supportingCopy.textContent = 'Only authenticated users can submit reviews. Your review will be posted to the API and the form will stay on this page after success.';
+        }
+        showFormFeedback(feedback, 'Ready to submit your review.', 'success');
+    } catch (error) {
+        showFormFeedback(feedback, error.message || 'Unable to load the selected place.', 'error');
+        if (placeSelect) {
+            placeSelect.innerHTML = '<option value="">Unable to load place</option>';
+        }
+        if (submitButton) {
+            submitButton.disabled = true;
+        }
+        return;
+    }
+
+    reviewForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const reviewText = reviewInput ? reviewInput.value.trim() : '';
+        if (!reviewText) {
+            showFormFeedback(feedback, 'Enter your review before submitting.', 'error');
+            return;
+        }
+
+        setButtonSubmitting(submitButton, true, 'Submitting...');
+        showFormFeedback(feedback, 'Submitting your review...', 'success');
+
+        try {
+            await submitReview(token, {
+                placeId,
+                userId,
+                text: reviewText
+            });
+
+            reviewForm.reset();
+            if (placeSelect) {
+                placeSelect.value = placeId;
+            }
+            showFormFeedback(feedback, 'Review submitted successfully.', 'success');
+        } catch (error) {
+            showFormFeedback(feedback, error.message || 'Failed to submit review.', 'error');
+        } finally {
+            setButtonSubmitting(submitButton, false, 'Submit Review');
+        }
+    });
+}
+
 function toggleLoginVisibility(isAuthenticated) {
     const loginLink = document.getElementById('login-link');
     const loginButton = document.getElementById('login-button');
@@ -196,6 +277,30 @@ async function fetchPlaceDetails(token, placeId) {
 
     if (!data || typeof data !== 'object' || Array.isArray(data)) {
         throw new Error('Unexpected place response from the API.');
+    }
+
+    return data;
+}
+
+async function submitReview(token, payload) {
+    const response = await fetch(`${getApiBaseUrl()}/reviews`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            place_id: payload.placeId,
+            user_id: payload.userId,
+            text: payload.text
+        })
+    });
+
+    const data = await parseResponse(response);
+
+    if (!response.ok) {
+        const message = typeof data.error === 'string' ? data.error : 'Failed to submit review.';
+        throw new Error(message);
     }
 
     return data;
@@ -394,6 +499,70 @@ function buildPlaceFacts(place) {
     }
 
     return facts;
+}
+
+function requireAuthentication() {
+    const token = getCookie('token');
+    if (!token) {
+        window.location.href = 'index.html';
+        return null;
+    }
+    return token;
+}
+
+function getUserIdFromToken(token) {
+    const payload = decodeJwtPayload(token);
+    if (!payload || typeof payload !== 'object') {
+        return null;
+    }
+
+    return payload.sub || payload.identity || null;
+}
+
+function decodeJwtPayload(token) {
+    const parts = String(token || '').split('.');
+    if (parts.length < 2) {
+        return null;
+    }
+
+    try {
+        const normalized = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+        const decoded = atob(padded);
+        return JSON.parse(decoded);
+    } catch (error) {
+        return null;
+    }
+}
+
+function populateReviewPlaceField(placeSelect, place) {
+    if (!placeSelect) {
+        return;
+    }
+
+    const placeId = place && place.id ? place.id : '';
+    const placeName = place && place.name ? place.name : 'Selected place';
+    placeSelect.innerHTML = `<option value="${escapeHtml(placeId)}">${escapeHtml(placeName)}</option>`;
+    placeSelect.value = placeId;
+}
+
+function showFormFeedback(feedbackElement, message, type) {
+    if (!feedbackElement) {
+        return;
+    }
+
+    feedbackElement.hidden = false;
+    feedbackElement.textContent = message;
+    feedbackElement.className = `form-feedback ${type === 'error' ? 'is-error' : 'is-success'}`;
+}
+
+function setButtonSubmitting(button, isSubmitting, label) {
+    if (!button) {
+        return;
+    }
+
+    button.disabled = isSubmitting;
+    button.textContent = label;
 }
 
 function getCookie(name) {
