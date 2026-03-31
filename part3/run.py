@@ -22,6 +22,12 @@ def _build_app_config() -> dict:
     if os.environ.get("CORS_ALLOW_ORIGIN"):
         config["CORS_ALLOW_ORIGIN"] = os.environ["CORS_ALLOW_ORIGIN"]
 
+    if os.environ.get("SQLALCHEMY_DATABASE_URI"):
+        config["SQLALCHEMY_DATABASE_URI"] = os.environ["SQLALCHEMY_DATABASE_URI"]
+
+    if _env_flag("USE_IN_MEMORY"):
+        config["USE_IN_MEMORY"] = True
+
     return config
 
 

@@ -23,6 +23,10 @@ from flask_jwt_extended import (
 
 from ..business.facade import HBNBFacade, NotFoundError, ValidationError
 import click
+from ..persistence.sqlalchemy_repository import (
+    SQLAlchemyRepository,
+    Base as SQLAlchemyRepositoryBase,
+)
 from ..persistence.in_memory_repository import InMemoryRepository
 
 
@@ -55,6 +59,9 @@ def create_app(config: object | dict | None = None):
         else:
             app.config.from_object(config)
 
+    app.config.setdefault("SQLALCHEMY_DATABASE_URI", os.environ.get("SQLALCHEMY_DATABASE_URI", "sqlite:///hbnb_dev.db"))
+    app.config.setdefault("USE_IN_MEMORY", False)
+
     @app.after_request
     def add_cors_headers(response):
         response.headers["Access-Control-Allow-Origin"] = app.config.get(
@@ -68,8 +75,12 @@ def create_app(config: object | dict | None = None):
         )
         return response
 
-    # Use in-memory repo by default for tests and simplicity
-    repo = InMemoryRepository()
+    if app.config.get("TESTING") or app.config.get("USE_IN_MEMORY"):
+        repo = InMemoryRepository()
+    else:
+        repo = SQLAlchemyRepository(app.config["SQLALCHEMY_DATABASE_URI"])
+        SQLAlchemyRepositoryBase.metadata.create_all(repo._engine)
+
     facade = HBNBFacade(repo)
     app.extensions["hbnb_facade"] = facade
 
