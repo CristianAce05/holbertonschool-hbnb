@@ -306,6 +306,10 @@ button {
     padding: 28px;
 }
 
+.place-details .form-feedback {
+    margin-bottom: 24px;
+}
+
 .place-hero {
     min-height: 300px;
     margin-bottom: 24px;
@@ -339,12 +343,33 @@ button {
     padding-left: 20px;
 }
 
+.feature-list.is-empty,
+.reviews-grid.is-empty {
+    color: var(--muted);
+}
+
+.detail-stack {
+    display: grid;
+    gap: 12px;
+}
+
+.detail-stack p {
+    margin: 0;
+}
+
 .review-card h3 {
     margin-bottom: 8px;
 }
 
 .reviews-section {
     padding-top: 6px;
+}
+
+.reviews-grid.is-empty {
+    padding: 20px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(31, 41, 51, 0.08);
 }
 
 .auth-layout,

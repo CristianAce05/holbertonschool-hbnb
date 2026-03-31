@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HBNB | Place Details</title>
+    <meta name="api-base-url" content="http://127.0.0.1:5000/api/v1">
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,52 +18,48 @@
                 <img src="logo.png" alt="HBNB logo" class="logo">
                 <span class="brand-name">HBNB</span>
             </a>
-            <a href="login.html" class="login-button">Log In</a>
+            <a href="login.html" class="login-button" id="login-button">Log In</a>
         </div>
         <nav class="main-nav" aria-label="Primary navigation">
             <a href="index.html">Places</a>
             <a href="place.html" aria-current="page">Place Details</a>
             <a href="add_review.html">Add Review</a>
-            <a href="login.html">Login</a>
+            <a href="login.html" id="login-link">Login</a>
         </nav>
     </header>
 
     <main>
-        <article class="place-details">
-            <div class="place-hero media-loft" aria-hidden="true"></div>
+        <article class="place-details" id="place-details">
+            <p id="place-feedback" class="form-feedback" aria-live="polite">Loading place details...</p>
+            <div class="place-hero media-loft" id="place-hero" aria-hidden="true"></div>
             <div class="place-header">
                 <div>
-                    <p class="eyebrow">Featured place</p>
-                    <h1>Harbor Loft</h1>
-                    <p class="host-line">Hosted by Maya Bennett</p>
+                    <p class="eyebrow">Selected place</p>
+                    <h1 id="place-name">Loading...</h1>
+                    <p class="host-line" id="place-host">Hosted by loading...</p>
                 </div>
-                <p class="price-badge">$145 / night</p>
+                <p class="price-badge" id="place-price">$0 / night</p>
             </div>
 
             <div class="place-info-grid">
                 <section class="place-info">
                     <h2>About this stay</h2>
-                    <p>The Harbor Loft is a quiet top-floor apartment with large north-facing windows, textured plaster walls, and a private terrace looking over the marina.</p>
-                    <p>Designed for remote work and weekend resets, it includes a full kitchen, dedicated desk, fast Wi-Fi, and a generous lounge area.</p>
+                    <div id="place-description">
+                        <p>Place description will appear here.</p>
+                    </div>
                 </section>
 
                 <section class="place-info">
                     <h2>Quick facts</h2>
-                    <ul class="feature-list">
-                        <li>2 guests</li>
-                        <li>1 bedroom</li>
-                        <li>1 bath</li>
-                        <li>Check-in after 3:00 PM</li>
+                    <ul class="feature-list" id="place-facts">
+                        <li>Place facts will appear here.</li>
                     </ul>
                 </section>
 
                 <section class="place-info">
                     <h2>Amenities</h2>
-                    <ul class="feature-list">
-                        <li>Fast Wi-Fi</li>
-                        <li>Rooftop terrace</li>
-                        <li>Espresso machine</li>
-                        <li>Self check-in</li>
+                    <ul class="feature-list" id="place-amenities">
+                        <li>Amenities will appear here.</li>
                     </ul>
                 </section>
             </div>
@@ -70,22 +67,12 @@
             <section class="reviews-section" aria-labelledby="reviews-heading">
                 <div class="section-heading review-heading">
                     <h2 id="reviews-heading">Guest Reviews</h2>
-                    <a href="add_review.html" class="details-button">Add a Review</a>
+                    <div id="add-review" hidden>
+                        <a href="add_review.html" class="details-button" id="add-review-link">Add a Review</a>
+                    </div>
                 </div>
 
-                <div class="reviews-grid">
-                    <article class="review-card">
-                        <h3>Quiet and beautifully staged</h3>
-                        <p>The terrace made the whole stay. The apartment was spotless, and the desk setup was good enough for a full workday.</p>
-                        <p class="review-meta">Nadia K. · Rating: 5/5</p>
-                    </article>
-
-                    <article class="review-card">
-                        <h3>Great light, easy check-in</h3>
-                        <p>Exactly as pictured. The host left clear instructions and the neighborhood felt calm but still connected to the city center.</p>
-                        <p class="review-meta">Jonas R. · Rating: 4/5</p>
-                    </article>
-                </div>
+                <div class="reviews-grid" id="reviews-list"></div>
             </section>
         </article>
     </main>
@@ -93,5 +80,6 @@
     <footer class="site-footer">
         <p>All rights reserved.</p>
     </footer>
+    <script src="scripts.js"></script>
 </body>
 </html>
