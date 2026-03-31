@@ -52,6 +52,29 @@ for `JWT_SECRET_KEY` (HMAC SHA256 recommendation). When enabling auth in
 production provide a cryptographically strong secret (store it in CI/hosting
 secrets and do not commit it to the repository).
 
+Startup (auth-enabled)
+----------------------
+
+To start Part 3 locally with JWT authentication enabled, run this command from
+the `part3` directory:
+
+```bash
+cd /root/holbertonschool-hbnb/part3
+ENABLE_AUTH=true JWT_SECRET_KEY=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA .venv/bin/python run.py
+```
+
+By default the API now preloads demo data on startup for frontend testing:
+
+- Demo user: `flow@example.com`
+- Demo password: `secret123`
+- Demo place: `Flow Test Loft`
+
+If you want to start the API without demo data, disable it explicitly:
+
+```bash
+SEED_DEMO_DATA=false ENABLE_AUTH=true JWT_SECRET_KEY=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA .venv/bin/python run.py
+```
+
 Database migrations
 -------------------
 
