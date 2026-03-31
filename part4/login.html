@@ -18,13 +18,16 @@
                 <img src="logo.png" alt="HBNB logo" class="logo">
                 <span class="brand-name">HBNB</span>
             </a>
-            <a href="login.html" class="login-button" aria-current="page">Log In</a>
+            <div class="header-actions">
+                <a href="login.html" class="login-button" id="login-button" aria-current="page">Log In</a>
+                <button type="button" class="login-button logout-button" id="logout-button" hidden>Log Out</button>
+            </div>
         </div>
         <nav class="main-nav" aria-label="Primary navigation">
             <a href="index.html">Places</a>
             <a href="place.html">Place Details</a>
             <a href="add_review.html">Add Review</a>
-            <a href="login.html" aria-current="page">Login</a>
+            <a href="login.html" id="login-link" aria-current="page">Login</a>
         </nav>
     </header>
 

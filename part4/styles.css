@@ -94,6 +94,12 @@ button {
     gap: 12px;
 }
 
+.header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
 .logo {
     width: 54px;
     height: 54px;
@@ -147,11 +153,20 @@ button {
     box-shadow: 0 14px 30px rgba(204, 90, 43, 0.22);
 }
 
+.logout-button {
+    background: var(--forest);
+    box-shadow: 0 14px 30px rgba(38, 70, 83, 0.2);
+}
+
 .login-button:hover,
 .details-button:hover,
 .submit-button:hover {
     transform: translateY(-1px);
     background: var(--accent-dark);
+}
+
+.logout-button:hover {
+    background: #1e3440;
 }
 
 .hero-section,
@@ -522,6 +537,10 @@ button {
     .brand-bar {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .header-actions {
+        width: 100%;
     }
 
     .main-nav {

@@ -18,7 +18,10 @@
                 <img src="logo.png" alt="HBNB logo" class="logo">
                 <span class="brand-name">HBNB</span>
             </a>
-            <a href="login.html" class="login-button" id="login-button">Log In</a>
+            <div class="header-actions">
+                <a href="login.html" class="login-button" id="login-button">Log In</a>
+                <button type="button" class="login-button logout-button" id="logout-button" hidden>Log Out</button>
+            </div>
         </div>
         <nav class="main-nav" aria-label="Primary navigation">
             <a href="index.html">Places</a>
@@ -39,16 +42,6 @@
                 <label for="place">Place</label>
                 <select id="place" name="place" required disabled>
                     <option value="">Loading place...</option>
-                </select>
-
-                <label for="rating">Rating</label>
-                <select id="rating" name="rating">
-                    <option value="">Optional rating</option>
-                    <option value="5">5 - Excellent</option>
-                    <option value="4">4 - Very Good</option>
-                    <option value="3">3 - Good</option>
-                    <option value="2">2 - Fair</option>
-                    <option value="1">1 - Poor</option>
                 </select>
 
                 <label for="review">Review</label>
