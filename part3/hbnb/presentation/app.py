@@ -9,7 +9,10 @@ from __future__ import annotations
 
 from flask import Flask, request, jsonify
 from flask import current_app
+from functools import lru_cache
+import importlib
 import os
+import sys
 from flask_jwt_extended import (
     JWTManager,
     create_access_token,
@@ -20,9 +23,28 @@ from flask_jwt_extended import (
 
 from ..business.facade import HBNBFacade, NotFoundError, ValidationError
 import click
-from alembic.config import Config as AlembicConfig
-from alembic import command as alembic_command
 from ..persistence.in_memory_repository import InMemoryRepository
+
+
+@lru_cache(maxsize=1)
+def _load_alembic_tools():
+    """Import Alembic from site-packages without colliding with ./alembic/."""
+
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    original_sys_path = list(sys.path)
+
+    try:
+        sys.path = [
+            entry
+            for entry in original_sys_path
+            if os.path.abspath(entry or os.getcwd()) != project_root
+        ]
+        alembic_config = importlib.import_module("alembic.config")
+        alembic_command = importlib.import_module("alembic.command")
+    finally:
+        sys.path = original_sys_path
+
+    return alembic_config.Config, alembic_command
 
 
 def create_app(config: object | dict | None = None):
@@ -32,6 +54,19 @@ def create_app(config: object | dict | None = None):
             app.config.update(config)
         else:
             app.config.from_object(config)
+
+    @app.after_request
+    def add_cors_headers(response):
+        response.headers["Access-Control-Allow-Origin"] = app.config.get(
+            "CORS_ALLOW_ORIGIN", "http://127.0.0.1:8000"
+        )
+        response.headers["Access-Control-Allow-Headers"] = (
+            "Content-Type, Authorization"
+        )
+        response.headers["Access-Control-Allow-Methods"] = (
+            "GET, POST, PUT, DELETE, OPTIONS"
+        )
+        return response
 
     # Use in-memory repo by default for tests and simplicity
     repo = InMemoryRepository()
@@ -157,6 +192,7 @@ def create_app(config: object | dict | None = None):
         """Alembic database migration commands."""
 
     def _alembic_config():
+        AlembicConfig, _ = _load_alembic_tools()
         # locate alembic.ini in project root
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
         cfg_path = os.path.join(project_root, "alembic.ini")
@@ -172,6 +208,7 @@ def create_app(config: object | dict | None = None):
     def db_upgrade(rev: str):
         """Run Alembic upgrade."""
         cfg = _alembic_config()
+        _, alembic_command = _load_alembic_tools()
         alembic_command.upgrade(cfg, rev)
 
     @db_cmd.command("downgrade")
@@ -179,6 +216,7 @@ def create_app(config: object | dict | None = None):
     def db_downgrade(rev: str):
         """Run Alembic downgrade to a given revision (e.g. -1 or base)."""
         cfg = _alembic_config()
+        _, alembic_command = _load_alembic_tools()
         alembic_command.downgrade(cfg, rev)
 
     @db_cmd.command("revision")
@@ -187,6 +225,7 @@ def create_app(config: object | dict | None = None):
     def db_revision(message: str, autogenerate: bool):
         """Create a new Alembic revision."""
         cfg = _alembic_config()
+        _, alembic_command = _load_alembic_tools()
         alembic_command.revision(cfg, message=message, autogenerate=autogenerate)
 
     @db_cmd.command("stamp")
@@ -194,6 +233,7 @@ def create_app(config: object | dict | None = None):
     def db_stamp(rev: str):
         """Stamp the database with a revision without running migrations."""
         cfg = _alembic_config()
+        _, alembic_command = _load_alembic_tools()
         alembic_command.stamp(cfg, rev)
 
     # Users
