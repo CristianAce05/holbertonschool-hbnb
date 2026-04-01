@@ -1,3 +1,5 @@
+const APP_VERSION = '20260331c';
+
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
     const placesList = document.getElementById('places-list');
@@ -42,7 +44,7 @@ function initializeAuthUI(token) {
     logoutButton.dataset.bound = 'true';
     logoutButton.addEventListener('click', () => {
         clearCookie('token');
-        window.location.href = 'index.html';
+        window.location.href = buildPageUrl('index.html');
     });
 }
 
@@ -121,7 +123,7 @@ function setupLoginForm(loginForm, token) {
 }
 
 async function setupIndexPage(placesList, token) {
-    token = requireAuthentication(token, buildLoginRedirectUrl('index.html'));
+    token = requireAuthentication(token, buildLoginRedirectUrl(buildPageUrl('index.html')));
     if (!token) {
         return;
     }
@@ -161,7 +163,7 @@ async function setupPlacePage(token) {
             const places = await fetchPlaces(token);
             if (places.length) {
                 placeId = places[0].id;
-                window.location.replace(`place.html?id=${encodeURIComponent(placeId)}`);
+                window.location.replace(buildPageUrl('place.html', { id: placeId }));
                 return;
             }
         } catch (error) {
@@ -174,7 +176,7 @@ async function setupPlacePage(token) {
     }
 
     if (addReviewLink) {
-        addReviewLink.href = `add_review.html?id=${encodeURIComponent(placeId)}`;
+        addReviewLink.href = buildPageUrl('add_review.html', { id: placeId });
     }
 
     try {
@@ -364,7 +366,7 @@ function renderPlaces(placesList, places) {
                 </div>
                 <p>${escapeHtml(description)}</p>
                 <div class="card-actions">
-                    <a href="place.html?id=${encodeURIComponent(place.id || '')}" class="details-button">View Details</a>
+                    <a href="${escapeHtml(buildPageUrl('place.html', { id: place.id || '' }))}" class="details-button">View Details</a>
                 </div>
             </div>
         `;
@@ -651,7 +653,7 @@ function updateReviewSelection(placeSelect, reviewHeading, supportingCopy) {
 }
 
 function buildLoginRedirectUrl(target) {
-    return `login.html?next=${encodeURIComponent(target || getCurrentPageTarget())}`;
+    return buildPageUrl('login.html', { next: target || getCurrentPageTarget() });
 }
 
 function getPostLoginDestination() {
@@ -659,7 +661,7 @@ function getPostLoginDestination() {
     const next = params.get('next');
 
     if (!next || /^(https?:)?\/\//i.test(next)) {
-        return 'index.html';
+        return buildPageUrl('index.html');
     }
 
     return next;
@@ -667,7 +669,10 @@ function getPostLoginDestination() {
 
 function getCurrentPageTarget() {
     const path = window.location.pathname.split('/').pop() || 'index.html';
-    return `${path}${window.location.search || ''}`;
+    const params = new URLSearchParams(window.location.search);
+    params.delete('v');
+    const query = params.toString();
+    return `${path}${query ? `?${query}` : ''}`;
 }
 
 function getStoredPlaceId() {
@@ -692,15 +697,39 @@ function storePlaceId(placeId) {
 
 function updateNavigationLinks() {
     const currentOrStoredPlaceId = getPlaceIdFromURL() || getStoredPlaceId();
-    const placeLink = document.querySelector('.main-nav a[href="place.html"], .main-nav a[href^="place.html?id="]');
-    const reviewLink = document.querySelector('.main-nav a[href="add_review.html"], .main-nav a[href^="add_review.html?id="]');
+    const placeLink = document.querySelector('.main-nav a[href="place.html"], .main-nav a[href^="place.html?id="], .main-nav a[href^="place.html?v="]');
+    const reviewLink = document.querySelector('.main-nav a[href="add_review.html"], .main-nav a[href^="add_review.html?id="], .main-nav a[href^="add_review.html?v="]');
+    const placesLink = document.querySelector('.main-nav a[href="index.html"], .main-nav a[href^="index.html?v="]');
+    const brandLink = document.querySelector('.brand-link');
+    const loginButton = document.getElementById('login-button');
+    const loginLink = document.getElementById('login-link');
+
+    if (placesLink) {
+        placesLink.href = buildPageUrl('index.html');
+    }
+
+    if (brandLink) {
+        brandLink.href = buildPageUrl('index.html');
+    }
+
+    if (loginButton) {
+        loginButton.href = buildPageUrl('login.html');
+    }
+
+    if (loginLink) {
+        loginLink.href = buildPageUrl('login.html');
+    }
 
     if (placeLink && currentOrStoredPlaceId) {
-        placeLink.href = `place.html?id=${encodeURIComponent(currentOrStoredPlaceId)}`;
+        placeLink.href = buildPageUrl('place.html', { id: currentOrStoredPlaceId });
+    } else if (placeLink) {
+        placeLink.href = buildPageUrl('place.html');
     }
 
     if (reviewLink && currentOrStoredPlaceId) {
-        reviewLink.href = `add_review.html?id=${encodeURIComponent(currentOrStoredPlaceId)}`;
+        reviewLink.href = buildPageUrl('add_review.html', { id: currentOrStoredPlaceId });
+    } else if (reviewLink) {
+        reviewLink.href = buildPageUrl('add_review.html');
     }
 }
 
@@ -714,8 +743,25 @@ function updateCurrentPagePlaceId(placeId) {
         return;
     }
 
-    const nextUrl = `add_review.html?id=${encodeURIComponent(placeId)}`;
+    const nextUrl = buildPageUrl('add_review.html', { id: placeId });
     window.history.replaceState({}, '', nextUrl);
+}
+
+function buildPageUrl(page, params) {
+    const url = new URL(page, window.location.href);
+    url.searchParams.set('v', APP_VERSION);
+
+    Object.entries(params || {}).forEach(([key, value]) => {
+        if (value === null || value === undefined || value === '') {
+            url.searchParams.delete(key);
+            return;
+        }
+
+        url.searchParams.set(key, value);
+    });
+
+    const fileName = url.pathname.split('/').pop() || page;
+    return `${fileName}${url.search}`;
 }
 
 function showFormFeedback(feedbackElement, message, type) {
