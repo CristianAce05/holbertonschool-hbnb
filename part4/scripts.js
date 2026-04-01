@@ -5,11 +5,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const placesList = document.getElementById('places-list');
     const placeDetails = document.getElementById('place-details');
     const reviewForm = document.getElementById('review-form');
+    const rawToken = getCookie('token');
     const token = getAuthenticatedToken();
 
     initializeAuthUI(token);
     updateNavigationLinks();
     bindNavigationHandlers();
+    renderDebugPanel(rawToken, token);
 
     if (loginForm) {
         setupLoginForm(loginForm, token);
@@ -798,6 +800,55 @@ function buildPageUrl(page, params) {
 
     const fileName = url.pathname.split('/').pop() || page;
     return `/${fileName}${url.search}`;
+}
+
+function renderDebugPanel(rawToken, token) {
+    const existingPanel = document.getElementById('debug-panel');
+    if (existingPanel) {
+        existingPanel.remove();
+    }
+
+    const payload = rawToken ? decodeJwtPayload(rawToken) : null;
+    const debugItems = [
+        ['Page', window.location.pathname.split('/').pop() || 'index.html'],
+        ['Query', window.location.search || '(none)'],
+        ['Raw token cookie', rawToken ? 'present' : 'missing'],
+        ['Validated token', token ? 'valid' : 'invalid or missing'],
+        ['JWT user id', token ? (getUserIdFromToken(token) || 'missing') : '(none)'],
+        ['JWT expires', payload && typeof payload.exp === 'number' ? new Date(payload.exp * 1000).toISOString() : '(none)'],
+        ['Place id in URL', getPlaceIdFromURL() || '(none)'],
+        ['Stored place id', getStoredPlaceId() || '(none)'],
+        ['Current page target', getCurrentPageTarget()],
+        ['Login redirect URL', buildLoginRedirectUrl(getCurrentPageTarget())],
+        ['Post-login destination', getPostLoginDestination()],
+    ];
+
+    const panel = document.createElement('aside');
+    panel.id = 'debug-panel';
+    panel.className = 'debug-panel';
+    panel.innerHTML = `
+        <div class="debug-panel__header">
+            <strong>Frontend Debug</strong>
+            <button type="button" class="debug-panel__close" aria-label="Hide debug panel">Hide</button>
+        </div>
+        <dl class="debug-panel__list">
+            ${debugItems.map(([label, value]) => `
+                <div class="debug-panel__row">
+                    <dt>${escapeHtml(label)}</dt>
+                    <dd>${escapeHtml(String(value))}</dd>
+                </div>
+            `).join('')}
+        </dl>
+    `;
+
+    const closeButton = panel.querySelector('.debug-panel__close');
+    if (closeButton) {
+        closeButton.addEventListener('click', () => {
+            panel.hidden = true;
+        });
+    }
+
+    document.body.appendChild(panel);
 }
 
 function bindNavigationHandlers() {
