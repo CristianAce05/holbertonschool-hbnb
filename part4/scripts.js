@@ -120,19 +120,25 @@ function setupLoginForm(loginForm, token) {
 }
 
 async function setupIndexPage(placesList, token) {
-    const priceFilter = document.getElementById('price-filter');
+    token = requireAuthentication(token, 'login.html');
+    if (!token) {
+        return;
+    }
+
+    const countryFilter = document.getElementById('country-filter');
     const feedback = document.getElementById('places-feedback');
 
-    if (priceFilter) {
-        priceFilter.addEventListener('change', () => {
-            filterPlaces(placesList, priceFilter.value, feedback);
+    if (countryFilter) {
+        countryFilter.addEventListener('change', () => {
+            filterPlaces(placesList, countryFilter.value, feedback);
         });
     }
 
     try {
         const places = await fetchPlaces(token);
         renderPlaces(placesList, places);
-        filterPlaces(placesList, priceFilter ? priceFilter.value : 'all', feedback);
+        populateCountryFilter(countryFilter, places);
+        filterPlaces(placesList, countryFilter ? countryFilter.value : 'all', feedback);
     } catch (error) {
         placesList.innerHTML = '';
         showFormFeedback(feedback, error.message || 'Unable to load places right now.', 'error');
@@ -323,11 +329,12 @@ function renderPlaces(placesList, places) {
         const card = document.createElement('article');
         const mediaClass = getMediaClass(index);
         const price = Number(place.price_by_night) || 0;
+        const country = getPlaceCountry(place);
         const ownerEmail = place.owner && place.owner.email ? place.owner.email : 'Unknown host';
         const description = place.description || 'No description is available for this place yet.';
 
         card.className = 'place-card';
-        card.dataset.price = String(price);
+        card.dataset.country = normalizeCountry(country);
         card.innerHTML = `
             <div class="card-media ${mediaClass}" aria-hidden="true"></div>
             <div class="card-content">
@@ -335,6 +342,7 @@ function renderPlaces(placesList, places) {
                 <p class="price-tag">$${price} / night</p>
                 <div class="card-meta">
                     <span>Host: ${escapeHtml(ownerEmail)}</span>
+                    <span>Country: ${escapeHtml(country)}</span>
                     <span>${Array.isArray(place.amenities) ? place.amenities.length : 0} amenities</span>
                 </div>
                 <p>${escapeHtml(description)}</p>
@@ -359,6 +367,7 @@ function renderPlaceDetails(place) {
     const placeHero = document.getElementById('place-hero');
 
     const ownerEmail = place.owner && place.owner.email ? place.owner.email : 'Unknown host';
+    const country = getPlaceCountry(place);
     const price = Number(place.price_by_night) || 0;
     const facts = buildPlaceFacts(place);
     const amenities = Array.isArray(place.amenities) ? place.amenities : [];
@@ -371,7 +380,7 @@ function renderPlaceDetails(place) {
     }
 
     if (placeHost) {
-        placeHost.textContent = `Hosted by ${ownerEmail}`;
+        placeHost.textContent = `Hosted by ${ownerEmail}${country !== 'Unknown' ? ` in ${country}` : ''}`;
     }
 
     if (placePrice) {
@@ -422,15 +431,15 @@ function renderPlaceDetails(place) {
     }
 }
 
-function filterPlaces(placesList, selectedPrice, feedback) {
+function filterPlaces(placesList, selectedCountry, feedback) {
     const cards = Array.from(placesList.querySelectorAll('.place-card'));
-    const maxPrice = selectedPrice === 'all' ? Number.POSITIVE_INFINITY : Number(selectedPrice);
+    const normalizedCountry = normalizeCountry(selectedCountry);
 
     let visibleCount = 0;
 
     cards.forEach((card) => {
-        const nightlyPrice = Number(card.dataset.price) || 0;
-        const shouldShow = nightlyPrice <= maxPrice;
+        const cardCountry = normalizeCountry(card.dataset.country || 'unknown');
+        const shouldShow = normalizedCountry === 'all' || cardCountry === normalizedCountry;
 
         card.classList.toggle('is-hidden', !shouldShow);
         if (shouldShow) {
@@ -448,11 +457,35 @@ function filterPlaces(placesList, selectedPrice, feedback) {
     }
 
     if (!visibleCount) {
-        showFormFeedback(feedback, 'No places match the selected price.', 'error');
+        showFormFeedback(feedback, 'No places match the selected country.', 'error');
         return;
     }
 
     showFormFeedback(feedback, `Showing ${visibleCount} place${visibleCount === 1 ? '' : 's'}.`, 'success');
+}
+
+function populateCountryFilter(countryFilter, places) {
+    if (!countryFilter) {
+        return;
+    }
+
+    const countries = Array.from(
+        new Set(
+            places
+                .map((place) => getPlaceCountry(place))
+                .filter((country) => country && country !== 'Unknown')
+                .sort((left, right) => left.localeCompare(right))
+        )
+    );
+
+    countryFilter.innerHTML = '<option value="all">All</option>';
+
+    countries.forEach((country) => {
+        const option = document.createElement('option');
+        option.value = country;
+        option.textContent = country;
+        countryFilter.appendChild(option);
+    });
 }
 
 function getMediaClass(index) {
@@ -478,6 +511,7 @@ function getPlaceIdFromURL() {
 
 function buildPlaceFacts(place) {
     const facts = [];
+    const country = getPlaceCountry(place);
 
     if (place.owner && place.owner.id) {
         facts.push(`Host ID: ${place.owner.id}`);
@@ -485,6 +519,10 @@ function buildPlaceFacts(place) {
 
     if (place.id) {
         facts.push(`Place ID: ${place.id}`);
+    }
+
+    if (country !== 'Unknown') {
+        facts.push(`Country: ${country}`);
     }
 
     if (Array.isArray(place.reviews)) {
@@ -502,15 +540,36 @@ function buildPlaceFacts(place) {
     return facts;
 }
 
-function requireAuthentication(token) {
+function requireAuthentication(token, redirectTarget) {
     token = token || getCookie('token');
 
     if (!token) {
-        window.location.href = 'index.html';
+        window.location.href = redirectTarget || 'index.html';
         return null;
     }
 
     return token;
+}
+
+function getPlaceCountry(place) {
+    if (!place || typeof place !== 'object') {
+        return 'Unknown';
+    }
+
+    const country = place.country
+        || (place.location && place.location.country)
+        || (place.address && place.address.country);
+
+    if (typeof country !== 'string' || !country.trim()) {
+        return 'Unknown';
+    }
+
+    return country.trim();
+}
+
+function normalizeCountry(value) {
+    const normalized = String(value || 'all').trim().toLowerCase();
+    return normalized || 'all';
 }
 
 function getUserIdFromToken(token) {

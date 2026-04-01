@@ -61,18 +61,60 @@ def create_app(config: object | dict | None = None):
 
     app.config.setdefault("SQLALCHEMY_DATABASE_URI", os.environ.get("SQLALCHEMY_DATABASE_URI", "sqlite:///hbnb_dev.db"))
     app.config.setdefault("USE_IN_MEMORY", False)
+    app.config.setdefault("CORS_ALLOW_ORIGIN", "http://127.0.0.1:8000")
+
+    def _allowed_origins() -> set[str]:
+        configured = app.config.get("CORS_ALLOW_ORIGINS")
+        if configured:
+            if isinstance(configured, str):
+                values = configured.split(",")
+            else:
+                values = configured
+        else:
+            env_value = os.environ.get("CORS_ALLOW_ORIGINS")
+            if env_value:
+                values = env_value.split(",")
+            else:
+                values = [app.config.get("CORS_ALLOW_ORIGIN")]
+
+        return {
+            str(value).strip()
+            for value in values
+            if value and str(value).strip()
+        }
+
+    def _resolve_cors_origin() -> str:
+        request_origin = request.headers.get("Origin")
+        allowed_origins = _allowed_origins()
+
+        if "*" in allowed_origins:
+            return "*"
+
+        if request_origin and request_origin in allowed_origins:
+            return request_origin
+
+        return app.config.get("CORS_ALLOW_ORIGIN", "http://127.0.0.1:8000")
+
+    @app.before_request
+    def handle_preflight_request():
+        if request.method != "OPTIONS":
+            return None
+
+        if not request.path.startswith("/api/"):
+            return None
+
+        return ("", 204)
 
     @app.after_request
     def add_cors_headers(response):
-        response.headers["Access-Control-Allow-Origin"] = app.config.get(
-            "CORS_ALLOW_ORIGIN", "http://127.0.0.1:8000"
+        response.headers["Access-Control-Allow-Origin"] = _resolve_cors_origin()
+        response.headers["Access-Control-Allow-Headers"] = request.headers.get(
+            "Access-Control-Request-Headers", "Content-Type, Authorization"
         )
-        response.headers["Access-Control-Allow-Headers"] = (
-            "Content-Type, Authorization"
+        response.headers["Access-Control-Allow-Methods"] = request.headers.get(
+            "Access-Control-Request-Method", "GET, POST, PUT, DELETE, OPTIONS"
         )
-        response.headers["Access-Control-Allow-Methods"] = (
-            "GET, POST, PUT, DELETE, OPTIONS"
-        )
+        response.headers["Vary"] = "Origin, Access-Control-Request-Headers, Access-Control-Request-Method"
         return response
 
     if app.config.get("TESTING") or app.config.get("USE_IN_MEMORY"):
