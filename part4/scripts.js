@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initializeAuthUI(token);
     updateNavigationLinks();
+    bindNavigationHandlers();
 
     if (loginForm) {
         setupLoginForm(loginForm, token);
@@ -761,7 +762,30 @@ function buildPageUrl(page, params) {
     });
 
     const fileName = url.pathname.split('/').pop() || page;
-    return `${fileName}${url.search}`;
+    return `/${fileName}${url.search}`;
+}
+
+function bindNavigationHandlers() {
+    const navigationTargets = document.querySelectorAll(
+        '.brand-link, .main-nav a, a.details-button, #login-button, #login-link'
+    );
+
+    navigationTargets.forEach((element) => {
+        if (!element || element.dataset.navBound === 'true') {
+            return;
+        }
+
+        element.dataset.navBound = 'true';
+        element.addEventListener('click', (event) => {
+            const href = element.getAttribute('href');
+            if (!href) {
+                return;
+            }
+
+            event.preventDefault();
+            window.location.assign(href);
+        });
+    });
 }
 
 function showFormFeedback(feedbackElement, message, type) {
