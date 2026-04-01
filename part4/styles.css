@@ -42,7 +42,7 @@ img {
 main {
     width: min(1120px, calc(100% - 32px));
     margin: 0 auto;
-    padding: 32px 0 64px;
+    padding: 28px 0 56px;
 }
 
 h1,
@@ -183,9 +183,9 @@ button {
 .hero-section {
     display: grid;
     grid-template-columns: 1.7fr 1fr;
-    gap: 24px;
-    padding: 32px;
-    margin-bottom: 28px;
+    gap: 20px;
+    padding: 28px;
+    margin-bottom: 22px;
     overflow: hidden;
 }
 
@@ -238,7 +238,7 @@ button {
 }
 
 .section-shell {
-    padding: 28px;
+    padding: 24px;
 }
 
 .section-heading,
@@ -254,7 +254,7 @@ button {
 .reviews-grid,
 .place-info-grid {
     display: grid;
-    gap: 20px;
+    gap: 16px;
 }
 
 .places-grid {
@@ -263,10 +263,10 @@ button {
 
 .place-card,
 .review-card {
-    margin: 20px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
+    margin: 0;
+    padding: 12px;
+    border: 1px solid rgba(31, 41, 51, 0.1);
+    border-radius: 18px;
     background: #fffdfa;
 }
 
@@ -294,8 +294,16 @@ button {
 
 .card-content {
     display: grid;
-    gap: 12px;
-    padding: 16px 8px 8px;
+    gap: 10px;
+    padding: 14px 6px 6px;
+}
+
+.card-content h3 {
+    margin-bottom: 0;
+}
+
+.card-content > p:last-of-type {
+    margin: 0;
 }
 
 .card-meta {
@@ -308,7 +316,7 @@ button {
 
 .card-actions {
     margin-top: auto;
-    padding-top: 8px;
+    padding-top: 4px;
 }
 
 .price-tag,
@@ -318,7 +326,7 @@ button {
 }
 
 .place-details {
-    padding: 28px;
+    padding: 24px;
 }
 
 .place-details .form-feedback {
@@ -327,11 +335,11 @@ button {
 
 .place-hero {
     min-height: 300px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .place-header {
-    margin-bottom: 20px;
+    margin-bottom: 18px;
 }
 
 .price-badge {
@@ -343,11 +351,11 @@ button {
 
 .place-info-grid {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    margin-bottom: 28px;
+    margin-bottom: 22px;
 }
 
 .place-info {
-    padding: 20px;
+    padding: 18px;
     border-radius: 22px;
     background: rgba(255, 255, 255, 0.78);
     border: 1px solid rgba(31, 41, 51, 0.08);
@@ -397,12 +405,12 @@ button {
 .form-shell,
 .add-review {
     width: min(720px, 100%);
-    padding: 32px;
+    padding: 28px;
 }
 
 .form {
     display: grid;
-    gap: 14px;
+    gap: 12px;
 }
 
 .form-feedback {
@@ -487,7 +495,7 @@ button {
 
 .submit-button {
     justify-self: start;
-    margin-top: 8px;
+    margin-top: 6px;
 }
 
 .submit-button[disabled] {
@@ -554,6 +562,26 @@ button {
     margin-top: 6px;
 }
 
+.section-heading h2,
+.place-info h2,
+.reviews-section h2 {
+    margin-bottom: 4px;
+}
+
+.section-heading p,
+.hero-copy,
+.supporting-copy,
+.helper-note,
+.compact-copy {
+    max-width: 60ch;
+}
+
+.details-button,
+.submit-button,
+.login-button {
+    min-height: 44px;
+}
+
 @media (max-width: 780px) {
     .hero-section,
     .section-heading,
@@ -570,7 +598,7 @@ button {
 
     .place-card,
     .review-card {
-        margin: 20px 0;
+        margin: 0;
     }
 
     .brand-bar {

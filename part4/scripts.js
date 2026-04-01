@@ -273,11 +273,11 @@ async function setupReviewPage(reviewForm, token) {
             if (placeSelect) {
                 placeSelect.value = placeId;
             }
-            showFormFeedback(feedback, 'Review submitted successfully.', 'success');
+            showFormFeedback(feedback, 'Your review was published.', 'success');
         } catch (error) {
-            showFormFeedback(feedback, error.message || 'Failed to submit review.', 'error');
+            showFormFeedback(feedback, error.message || 'We could not publish the review right now.', 'error');
         } finally {
-            setButtonSubmitting(submitButton, false, 'Submit Review');
+            setButtonSubmitting(submitButton, false, 'Publish Review');
         }
     });
 }
@@ -361,7 +361,7 @@ function renderPlaces(placesList, places) {
         const price = Number(place.price_by_night) || 0;
         const country = getPlaceCountry(place);
         const ownerEmail = place.owner && place.owner.email ? place.owner.email : 'Unknown host';
-        const description = place.description || 'No description is available for this place yet.';
+        const description = place.description || 'A full description has not been added for this stay yet.';
 
         card.className = 'place-card';
         card.dataset.country = normalizeCountry(country);
@@ -377,7 +377,7 @@ function renderPlaces(placesList, places) {
                 </div>
                 <p>${escapeHtml(description)}</p>
                 <div class="card-actions">
-                    <a href="${escapeHtml(buildPageUrl('place.html', { id: place.id || '' }))}" class="details-button">View Details</a>
+                    <a href="${escapeHtml(buildPageUrl('place.html', { id: place.id || '' }))}" class="details-button">Open Details</a>
                 </div>
             </div>
         `;
@@ -421,7 +421,7 @@ function renderPlaceDetails(place) {
     }
 
     if (placeDescription) {
-        const descriptionText = place.description || 'No description is available for this place yet.';
+        const descriptionText = place.description || 'A full description has not been added for this stay yet.';
         placeDescription.innerHTML = `<div class="detail-stack"><p>${escapeHtml(descriptionText)}</p></div>`;
     }
 
@@ -435,7 +435,7 @@ function renderPlaceDetails(place) {
             placeAmenities.innerHTML = amenities.map((amenity) => `<li>${escapeHtml(amenity.name || 'Unnamed amenity')}</li>`).join('');
             placeAmenities.classList.remove('is-empty');
         } else {
-            placeAmenities.innerHTML = '<li>No amenities listed.</li>';
+            placeAmenities.innerHTML = '<li>Amenities will appear here once they are added.</li>';
             placeAmenities.classList.add('is-empty');
         }
     }
@@ -455,7 +455,7 @@ function renderPlaceDetails(place) {
             }).join('');
         } else {
             reviewsList.classList.add('is-empty');
-            reviewsList.innerHTML = '<p>No reviews yet for this place.</p>';
+            reviewsList.innerHTML = '<p>No guest reviews yet. Be the first to share your stay.</p>';
         }
     }
 
@@ -485,16 +485,16 @@ function filterPlaces(placesList, selectedCountry, feedback) {
     }
 
     if (!cards.length) {
-        showFormFeedback(feedback, 'No places are available yet.', 'success');
+        showFormFeedback(feedback, 'No stays are available yet.', 'success');
         return;
     }
 
     if (!visibleCount) {
-        showFormFeedback(feedback, 'No places match the selected country.', 'error');
+        showFormFeedback(feedback, 'No stays match that country yet.', 'error');
         return;
     }
 
-    showFormFeedback(feedback, `Showing ${visibleCount} place${visibleCount === 1 ? '' : 's'}.`, 'success');
+    showFormFeedback(feedback, `Showing ${visibleCount} stay${visibleCount === 1 ? '' : 's'}.`, 'success');
 }
 
 function populateCountryFilter(countryFilter, places) {
