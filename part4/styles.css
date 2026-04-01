@@ -106,6 +106,7 @@ button {
     width: 54px;
     height: 54px;
     border-radius: 16px;
+    object-fit: contain;
 }
 
 .brand-name {
