@@ -103,10 +103,8 @@ button {
 }
 
 .logo {
-    width: 54px;
-    height: 54px;
-    border-radius: 16px;
-    object-fit: contain;
+    height: 36px;
+    width: auto;
 }
 
 .brand-name {
