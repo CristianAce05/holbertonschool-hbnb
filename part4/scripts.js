@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const placesList = document.getElementById('places-list');
     const placeDetails = document.getElementById('place-details');
     const reviewForm = document.getElementById('review-form');
-    const token = getCookie('token');
+    const token = getAuthenticatedToken();
 
     initializeAuthUI(token);
     updateNavigationLinks();
@@ -564,7 +564,7 @@ function buildPlaceFacts(place) {
 }
 
 function requireAuthentication(token, redirectTarget) {
-    token = token || getCookie('token');
+    token = token || getAuthenticatedToken();
 
     if (!token) {
         window.location.href = redirectTarget || 'index.html';
@@ -602,6 +602,41 @@ function getUserIdFromToken(token) {
     }
 
     return payload.sub || payload.identity || null;
+}
+
+function getAuthenticatedToken() {
+    const token = getCookie('token');
+    if (!token) {
+        return null;
+    }
+
+    if (!isValidJwtToken(token)) {
+        clearCookie('token');
+        return null;
+    }
+
+    return token;
+}
+
+function isValidJwtToken(token) {
+    const payload = decodeJwtPayload(token);
+    if (!payload || typeof payload !== 'object') {
+        return false;
+    }
+
+    const userId = payload.sub || payload.identity;
+    if (!userId || typeof userId !== 'string') {
+        return false;
+    }
+
+    if (typeof payload.exp === 'number') {
+        const nowInSeconds = Math.floor(Date.now() / 1000);
+        if (payload.exp <= nowInSeconds) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 function decodeJwtPayload(token) {
