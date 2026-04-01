@@ -87,6 +87,7 @@ class HBNBApiTestCase(unittest.TestCase):
         # create valid place
         payload = {
             "name": "P",
+            "country": "Morocco",
             "user_id": uid,
             "amenity_ids": [aid],
             "price_by_night": 10,
@@ -103,11 +104,15 @@ class HBNBApiTestCase(unittest.TestCase):
         p2 = r.get_json()
         self.assertIn("owner", p2)
         self.assertEqual(p2["owner"]["id"], uid)
+        self.assertEqual(p2.get("country"), "Morocco")
         self.assertTrue(isinstance(p2.get("amenities", []), list))
         # update price
-        r = self.put_json(f"/api/v1/places/{pid}", {"price_by_night": 20})
+        r = self.put_json(
+            f"/api/v1/places/{pid}", {"price_by_night": 20, "country": "Spain"}
+        )
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.get_json().get("price_by_night"), 20)
+        self.assertEqual(r.get_json().get("country"), "Spain")
 
     def test_review_crud_and_place_includes_reviews(self):
         # create user and place

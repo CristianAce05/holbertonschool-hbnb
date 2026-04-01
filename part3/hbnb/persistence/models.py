@@ -76,6 +76,7 @@ class Place(Base, BaseModelMixin):
     __tablename__ = "places"
     name = Column(String, nullable=False)
     description = Column(Text, nullable=True)
+    country = Column(String, nullable=True)
     number_rooms = Column(Integer, nullable=True)
     number_bathrooms = Column(Integer, nullable=True)
     max_guest = Column(Integer, nullable=True)

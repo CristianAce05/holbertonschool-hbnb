@@ -52,6 +52,7 @@ def seed_demo_data(app) -> Dict[str, Any]:
             "user_id": user["id"],
             "name": "Flow Test Loft",
             "description": "Preloaded demo place for frontend walkthroughs.",
+            "country": "Portugal",
             "price_by_night": 88,
             "number_rooms": 1,
             "number_bathrooms": 1,

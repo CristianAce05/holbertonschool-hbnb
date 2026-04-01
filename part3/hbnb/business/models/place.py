@@ -12,6 +12,7 @@ from .base import BaseModel
 class Place(BaseModel):
     name: str = ""
     description: str = ""
+    country: str = ""
     user_id: str = ""
     number_rooms: int = 0
     number_bathrooms: int = 0
@@ -22,6 +23,9 @@ class Place(BaseModel):
     amenity_ids: List[str] = field(default_factory=list)
 
     def __post_init__(self):
+        if not isinstance(self.country, str):
+            raise TypeError("country must be str")
+
         for attr in (
             "number_rooms",
             "number_bathrooms",

@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS places (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT,
+  country TEXT,
   number_rooms INTEGER,
   number_bathrooms INTEGER,
   max_guest INTEGER,

@@ -23,3 +23,34 @@ INSERT OR REPLACE INTO amenities (id, name, created_at, updated_at) VALUES (
 INSERT OR REPLACE INTO amenities (id, name, created_at, updated_at) VALUES (
   'amenity-3', 'Swimming Pool', datetime('now'), datetime('now')
 );
+
+-- Insert a demo place with a real country value for frontend filtering
+INSERT OR REPLACE INTO places (
+  id,
+  name,
+  description,
+  country,
+  number_rooms,
+  number_bathrooms,
+  max_guest,
+  price_by_night,
+  latitude,
+  longitude,
+  user_id,
+  created_at,
+  updated_at
+) VALUES (
+  'place-demo-1',
+  'Lisbon Courtyard Studio',
+  'Compact studio used for local frontend and SQL testing.',
+  'Portugal',
+  1,
+  1,
+  2,
+  95,
+  38.7223,
+  -9.1393,
+  'user-admin-1',
+  datetime('now'),
+  datetime('now')
+);
