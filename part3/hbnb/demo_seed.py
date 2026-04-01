@@ -44,19 +44,88 @@ def seed_demo_data(app) -> Dict[str, Any]:
 
     wifi = facade.create("Amenity", {"name": "Fast Wi-Fi"})
     coffee = facade.create("Amenity", {"name": "Coffee station"})
+    pool = facade.create("Amenity", {"name": "Swimming Pool"})
+    parking = facade.create("Amenity", {"name": "Free Parking"})
+    kitchen = facade.create("Amenity", {"name": "Full Kitchen"})
+    ac = facade.create("Amenity", {"name": "Air Conditioning"})
 
-    place = facade.create(
+    place1 = facade.create(
         "Place",
         {
             "user_id": user["id"],
-            "name": "Flow Test Loft",
-            "description": "Preloaded demo place for frontend walkthroughs.",
-            "country": "Portugal",
-            "price_by_night": 88,
+            "name": "Sunny Beach House",
+            "description": "A bright and airy beach house just steps from the sand. "
+            "Perfect for a relaxing getaway with ocean views from every room.",
+            "country": "Uruguay",
+            "price_by_night": 120,
+            "number_rooms": 3,
+            "number_bathrooms": 2,
+            "max_guest": 6,
+            "amenity_ids": [wifi["id"], pool["id"], parking["id"], kitchen["id"]],
+        },
+    )
+
+    facade.create(
+        "Place",
+        {
+            "user_id": user["id"],
+            "name": "Downtown Loft",
+            "description": "Modern loft in the heart of the city with exposed brick walls, "
+            "high ceilings, and walking distance to restaurants and nightlife.",
+            "country": "Argentina",
+            "price_by_night": 85,
             "number_rooms": 1,
             "number_bathrooms": 1,
             "max_guest": 2,
-            "amenity_ids": [wifi["id"], coffee["id"]],
+            "amenity_ids": [wifi["id"], coffee["id"], ac["id"]],
+        },
+    )
+
+    facade.create(
+        "Place",
+        {
+            "user_id": user["id"],
+            "name": "Mountain Cabin Retreat",
+            "description": "Cozy wooden cabin surrounded by pine trees with a fireplace, "
+            "hiking trails nearby, and stunning mountain views.",
+            "country": "Chile",
+            "price_by_night": 95,
+            "number_rooms": 2,
+            "number_bathrooms": 1,
+            "max_guest": 4,
+            "amenity_ids": [wifi["id"], parking["id"], kitchen["id"]],
+        },
+    )
+
+    facade.create(
+        "Place",
+        {
+            "user_id": user["id"],
+            "name": "Colonial Garden Suite",
+            "description": "Charming suite in a restored colonial home with a private garden, "
+            "hammock, and traditional tile floors.",
+            "country": "Colombia",
+            "price_by_night": 70,
+            "number_rooms": 1,
+            "number_bathrooms": 1,
+            "max_guest": 2,
+            "amenity_ids": [wifi["id"], coffee["id"], ac["id"]],
+        },
+    )
+
+    facade.create(
+        "Place",
+        {
+            "user_id": user["id"],
+            "name": "Lakefront Villa",
+            "description": "Spacious villa on the lake with a private dock, kayaks included, "
+            "and panoramic sunset views from the terrace.",
+            "country": "Uruguay",
+            "price_by_night": 200,
+            "number_rooms": 4,
+            "number_bathrooms": 3,
+            "max_guest": 8,
+            "amenity_ids": [wifi["id"], pool["id"], parking["id"], kitchen["id"], ac["id"]],
         },
     )
 
@@ -64,15 +133,15 @@ def seed_demo_data(app) -> Dict[str, Any]:
         "Review",
         {
             "user_id": user["id"],
-            "place_id": place["id"],
-            "text": "Demo review loaded automatically on startup.",
+            "place_id": place1["id"],
+            "text": "Amazing stay! The beach was gorgeous and the house was spotless.",
         },
     )
 
     return {
         "seeded": True,
         "user": _sanitize_user(user),
-        "place": place,
+        "place": place1,
         "review": review,
         "credentials": {
             "email": DEMO_USER_EMAIL,
