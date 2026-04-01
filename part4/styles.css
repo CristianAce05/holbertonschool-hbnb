@@ -21,6 +21,17 @@ html {
     scroll-behavior: smooth;
 }
 
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 body {
     margin: 0;
     min-height: 100vh;
@@ -29,6 +40,8 @@ body {
     background:
         radial-gradient(circle at top left, rgba(240, 180, 76, 0.35), transparent 28%),
         linear-gradient(135deg, #f8efe5 0%, #f2f6f2 52%, #e3edf2 100%);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -131,16 +144,23 @@ button {
 .main-nav a {
     padding: 9px 16px;
     color: var(--muted);
+    transition: color 0.25s ease, background 0.25s ease, transform 0.2s ease;
 }
 
 .main-nav a[hidden] {
     display: none;
 }
 
-.main-nav a:hover,
-.main-nav a[aria-current="page"] {
+.main-nav a:hover {
     color: var(--forest);
     background: rgba(38, 70, 83, 0.08);
+    transform: translateY(-1px);
+}
+
+.main-nav a[aria-current="page"] {
+    color: var(--forest);
+    background: rgba(38, 70, 83, 0.10);
+    font-weight: 600;
 }
 
 .main-nav a:focus-visible,
@@ -206,6 +226,7 @@ button {
     padding: 28px;
     margin-bottom: 22px;
     overflow: hidden;
+    animation: fadeInUp 0.6s ease both;
 }
 
 .hero-section h1,
@@ -254,6 +275,12 @@ button {
     padding: 14px 16px;
     border-radius: 18px;
     background: rgba(255, 255, 255, 0.1);
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.hero-panel p:hover {
+    background: rgba(255, 255, 255, 0.18);
+    transform: translateX(4px);
 }
 
 .section-shell {
@@ -299,10 +326,24 @@ button {
     flex-direction: column;
     overflow: hidden;
     min-height: 100%;
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s ease;
+    animation: fadeInUp 0.5s ease both;
+}
+
+.place-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 24px 48px rgba(31, 41, 51, 0.14);
 }
 
 .review-card {
     padding: 18px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: fadeInUp 0.5s ease both;
+}
+
+.review-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 36px rgba(31, 41, 51, 0.12);
 }
 
 .place-card.is-hidden {
@@ -330,6 +371,11 @@ button {
     object-fit: cover;
     display: block;
     border-radius: 18px;
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.place-card:hover .card-image {
+    transform: scale(1.05);
 }
 
 .card-media-placeholder {
@@ -405,6 +451,11 @@ button {
     object-fit: cover;
     display: block;
     border-radius: 18px;
+    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.place-hero:hover .hero-image {
+    transform: scale(1.03);
 }
 
 .place-header {
@@ -417,6 +468,11 @@ button {
     background: rgba(240, 180, 76, 0.2);
     white-space: nowrap;
     box-shadow: inset 0 0 0 1px rgba(240, 180, 76, 0.18);
+    transition: transform 0.3s ease;
+}
+
+.price-badge:hover {
+    transform: scale(1.05);
 }
 
 .place-info-grid {
@@ -430,6 +486,12 @@ button {
     background: rgba(255, 255, 255, 0.78);
     border: 1px solid rgba(31, 41, 51, 0.08);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.place-info:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(31, 41, 51, 0.08);
 }
 
 .feature-list {
@@ -487,6 +549,7 @@ button {
 .form-shell,
 .add-review {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.86));
+    animation: fadeInUp 0.5s ease both;
 }
 
 .form {
@@ -664,6 +727,13 @@ button {
 .submit-button,
 .login-button {
     min-height: 44px;
+    transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.25s ease, box-shadow 0.3s ease;
+}
+
+.details-button:active,
+.submit-button:active,
+.login-button:active {
+    transform: translateY(0) scale(0.97);
 }
 
 @media (max-width: 780px) {

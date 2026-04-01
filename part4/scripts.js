@@ -365,6 +365,7 @@ function renderPlaces(placesList, places) {
 
         card.className = 'place-card';
         card.dataset.country = normalizeCountry(country);
+        card.style.animationDelay = `${index * 0.1}s`;
         card.innerHTML = `
             <div class="card-media">
                 ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(place.name || 'Place photo')}" class="card-image">` : `<div class="card-media-placeholder" aria-hidden="true"></div>`}
@@ -445,11 +446,11 @@ function renderPlaceDetails(place) {
     if (reviewsList) {
         if (reviews.length) {
             reviewsList.classList.remove('is-empty');
-            reviewsList.innerHTML = reviews.map((review) => {
+            reviewsList.innerHTML = reviews.map((review, reviewIndex) => {
                 const author = review.user_name || review.user || review.user_id || 'Guest';
                 const text = review.text || review.comment || 'No review text provided.';
                 return `
-                    <article class="review-card">
+                    <article class="review-card" style="animation-delay: ${reviewIndex * 0.1}s">
                         <h3>${escapeHtml(author)}</h3>
                         <p>${escapeHtml(text)}</p>
                     </article>
