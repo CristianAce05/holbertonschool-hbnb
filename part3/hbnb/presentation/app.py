@@ -59,7 +59,10 @@ def create_app(config: object | dict | None = None):
         else:
             app.config.from_object(config)
 
-    app.config.setdefault("SQLALCHEMY_DATABASE_URI", os.environ.get("SQLALCHEMY_DATABASE_URI", "sqlite:///hbnb_dev.db"))
+    app.config.setdefault(
+        "SQLALCHEMY_DATABASE_URI",
+        os.environ.get("SQLALCHEMY_DATABASE_URI", "sqlite:///hbnb_dev.db"),
+    )
     app.config.setdefault("USE_IN_MEMORY", False)
     app.config.setdefault("CORS_ALLOW_ORIGIN", "http://127.0.0.1:8000")
 
@@ -77,11 +80,7 @@ def create_app(config: object | dict | None = None):
             else:
                 values = [app.config.get("CORS_ALLOW_ORIGIN")]
 
-        return {
-            str(value).strip()
-            for value in values
-            if value and str(value).strip()
-        }
+        return {str(value).strip() for value in values if value and str(value).strip()}
 
     def _resolve_cors_origin() -> str:
         request_origin = request.headers.get("Origin")
@@ -114,7 +113,9 @@ def create_app(config: object | dict | None = None):
         response.headers["Access-Control-Allow-Methods"] = request.headers.get(
             "Access-Control-Request-Method", "GET, POST, PUT, DELETE, OPTIONS"
         )
-        response.headers["Vary"] = "Origin, Access-Control-Request-Headers, Access-Control-Request-Method"
+        response.headers["Vary"] = (
+            "Origin, Access-Control-Request-Headers, Access-Control-Request-Method"
+        )
         return response
 
     if app.config.get("TESTING") or app.config.get("USE_IN_MEMORY"):
@@ -133,13 +134,16 @@ def create_app(config: object | dict | None = None):
         if not key:
             raise RuntimeError(
                 "ENABLE_AUTH is True but JWT_SECRET_KEY is not set. "
-                "Set app.config['JWT_SECRET_KEY'] or the environment variable JWT_SECRET_KEY."
+                "Set app.config['JWT_SECRET_KEY'] or the environment variable "
+                "JWT_SECRET_KEY."
             )
-        # enforce minimum key length in bytes (HMAC SHA256 recommended >=32 bytes)
+        # Enforce a minimum key length in bytes.
+        # HMAC SHA256 guidance is at least 32 bytes.
         if len(key.encode("utf-8")) < 32:
             raise RuntimeError(
                 "JWT_SECRET_KEY is too short; must be at least 32 bytes. "
-                "Set a longer secret via app.config['JWT_SECRET_KEY'] or the environment."
+                "Set a longer secret via app.config['JWT_SECRET_KEY'] "
+                "or the environment."
             )
         app.config["JWT_SECRET_KEY"] = key
         JWTManager(app)
@@ -248,17 +252,23 @@ def create_app(config: object | dict | None = None):
     def _alembic_config():
         AlembicConfig, _ = _load_alembic_tools()
         # locate alembic.ini in project root
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        project_root = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "..")
+        )
         cfg_path = os.path.join(project_root, "alembic.ini")
         cfg = AlembicConfig(cfg_path)
         # prefer an explicit SQLALCHEMY_DATABASE_URI in app config
-        uri = app.config.get("SQLALCHEMY_DATABASE_URI") or os.environ.get("SQLALCHEMY_DATABASE_URI")
+        uri = app.config.get("SQLALCHEMY_DATABASE_URI") or os.environ.get(
+            "SQLALCHEMY_DATABASE_URI"
+        )
         if uri:
             cfg.set_main_option("sqlalchemy.url", uri)
         return cfg
 
     @db_cmd.command("upgrade")
-    @click.option("--rev", default="head", help="Revision to upgrade to (default: head)")
+    @click.option(
+        "--rev", default="head", help="Revision to upgrade to (default: head)"
+    )
     def db_upgrade(rev: str):
         """Run Alembic upgrade."""
         cfg = _alembic_config()
@@ -275,7 +285,9 @@ def create_app(config: object | dict | None = None):
 
     @db_cmd.command("revision")
     @click.option("-m", "--message", required=True, help="Revision message")
-    @click.option("--autogenerate", is_flag=True, help="Autogenerate migration from models")
+    @click.option(
+        "--autogenerate", is_flag=True, help="Autogenerate migration from models"
+    )
     def db_revision(message: str, autogenerate: bool):
         """Create a new Alembic revision."""
         cfg = _alembic_config()

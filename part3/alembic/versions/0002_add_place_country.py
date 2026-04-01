@@ -8,7 +8,6 @@ Create Date: 2026-03-31 00:00:00.000000
 from alembic import op
 import sqlalchemy as sa
 
-
 revision = "0002_add_place_country"
 down_revision = "0001_initial"
 branch_labels = None

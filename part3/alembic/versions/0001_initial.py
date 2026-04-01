@@ -1,12 +1,11 @@
 """initial migration
 
 Revision ID: 0001_initial
-Revises: 
+Revises:
 Create Date: 2026-03-13 00:00:00.000000
 """
 
 from alembic import op
-
 
 revision = "0001_initial"
 down_revision = None

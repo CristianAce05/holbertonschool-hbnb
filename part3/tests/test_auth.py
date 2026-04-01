@@ -20,17 +20,24 @@ class AuthIntegrationTestCase(unittest.TestCase):
 
     def post_json(self, path, payload, headers=None):
         return self.client.post(
-            path, data=json.dumps(payload), content_type="application/json", headers=headers
+            path,
+            data=json.dumps(payload),
+            content_type="application/json",
+            headers=headers,
         )
 
     def test_login_and_create_place_as_owner(self):
         # create user
-        r = self.post_json("/api/v1/users", {"email": "u1@example.com", "password": "pw"})
+        r = self.post_json(
+            "/api/v1/users", {"email": "u1@example.com", "password": "pw"}
+        )
         self.assertEqual(r.status_code, 201)
         u = r.get_json()
         uid = u["id"]
         # login
-        r = self.post_json("/api/v1/auth/login", {"email": "u1@example.com", "password": "pw"})
+        r = self.post_json(
+            "/api/v1/auth/login", {"email": "u1@example.com", "password": "pw"}
+        )
         self.assertEqual(r.status_code, 200)
         token = r.get_json().get("access_token")
         self.assertTrue(token)
@@ -48,7 +55,9 @@ class AuthIntegrationTestCase(unittest.TestCase):
         )
         b_id = r2.get_json()["id"]
         # login as user A
-        r = self.post_json("/api/v1/auth/login", {"email": "a@example.com", "password": "pw"})
+        r = self.post_json(
+            "/api/v1/auth/login", {"email": "a@example.com", "password": "pw"}
+        )
         token = r.get_json().get("access_token")
         headers = {"Authorization": f"Bearer {token}"}
         # attempt to create place claiming to be user B -> forbidden

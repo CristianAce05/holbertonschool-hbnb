@@ -7,16 +7,15 @@ import json
 import os
 import sys
 
-
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
-from hbnb import create_app
-from hbnb.demo_seed import seed_demo_data
-
 
 def main():
+    from hbnb import create_app
+    from hbnb.demo_seed import seed_demo_data
+
     config = {}
     if os.environ.get("JWT_SECRET_KEY"):
         config["JWT_SECRET_KEY"] = os.environ["JWT_SECRET_KEY"]

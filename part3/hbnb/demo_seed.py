@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-
 DEMO_USER_EMAIL = "flow@example.com"
 DEMO_USER_PASSWORD = "secret123"
 

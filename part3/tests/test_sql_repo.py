@@ -45,9 +45,9 @@ class SQLAlchemyRepositoryIntegrationTest(unittest.TestCase):
         self.assertIsNone(self.repo.get("Item", obj_id))
 
     def test_clear_and_multiple(self):
-        _a = self.repo.create("A", {"x": 1})
-        _b = self.repo.create("A", {"x": 2})
-        _c = self.repo.create("B", {"y": 3})
+        self.repo.create("A", {"x": 1})
+        self.repo.create("A", {"x": 2})
+        self.repo.create("B", {"y": 3})
         self.assertEqual(self.repo.count("A"), 2)
         self.assertEqual(self.repo.count("B"), 1)
         self.repo.clear()
