@@ -62,6 +62,7 @@ def seed_demo_data(app) -> Dict[str, Any]:
             "number_bathrooms": 2,
             "max_guest": 6,
             "amenity_ids": [wifi["id"], pool["id"], parking["id"], kitchen["id"]],
+            "image": "images/place_beach.jpg",
         },
     )
 
@@ -78,6 +79,7 @@ def seed_demo_data(app) -> Dict[str, Any]:
             "number_bathrooms": 1,
             "max_guest": 2,
             "amenity_ids": [wifi["id"], coffee["id"], ac["id"]],
+            "image": "images/place_loft.jpg",
         },
     )
 
@@ -94,6 +96,7 @@ def seed_demo_data(app) -> Dict[str, Any]:
             "number_bathrooms": 1,
             "max_guest": 4,
             "amenity_ids": [wifi["id"], parking["id"], kitchen["id"]],
+            "image": "images/place_cabin.jpg",
         },
     )
 
@@ -110,6 +113,7 @@ def seed_demo_data(app) -> Dict[str, Any]:
             "number_bathrooms": 1,
             "max_guest": 2,
             "amenity_ids": [wifi["id"], coffee["id"], ac["id"]],
+            "image": "images/place_colonial.jpg",
         },
     )
 
@@ -126,6 +130,7 @@ def seed_demo_data(app) -> Dict[str, Any]:
             "number_bathrooms": 3,
             "max_guest": 8,
             "amenity_ids": [wifi["id"], pool["id"], parking["id"], kitchen["id"], ac["id"]],
+            "image": "images/place_lake.jpg",
         },
     )
 

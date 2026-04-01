@@ -357,16 +357,18 @@ function renderPlaces(placesList, places) {
 
     places.forEach((place, index) => {
         const card = document.createElement('article');
-        const mediaClass = getMediaClass(index);
         const price = Number(place.price_by_night) || 0;
         const country = getPlaceCountry(place);
         const ownerEmail = place.owner && place.owner.email ? place.owner.email : 'Unknown host';
         const description = place.description || 'A full description has not been added for this stay yet.';
+        const image = place.image || '';
 
         card.className = 'place-card';
         card.dataset.country = normalizeCountry(country);
         card.innerHTML = `
-            <div class="card-media ${mediaClass}" aria-hidden="true"></div>
+            <div class="card-media">
+                ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(place.name || 'Place photo')}" class="card-image">` : `<div class="card-media-placeholder" aria-hidden="true"></div>`}
+            </div>
             <div class="card-content">
                 <h3>${escapeHtml(place.name || 'Unnamed place')}</h3>
                 <p class="price-tag">$${price} / night</p>
@@ -460,7 +462,14 @@ function renderPlaceDetails(place) {
     }
 
     if (placeHero) {
-        placeHero.className = `place-hero ${getMediaClassFromSeed(place.id || place.name || '0')}`;
+        const heroImage = place.image || '';
+        if (heroImage) {
+            placeHero.innerHTML = `<img src="${escapeHtml(heroImage)}" alt="${escapeHtml(place.name || 'Place photo')}" class="hero-image">`;
+            placeHero.className = 'place-hero';
+        } else {
+            placeHero.innerHTML = '';
+            placeHero.className = `place-hero ${getMediaClassFromSeed(place.id || place.name || '0')}`;
+        }
     }
 }
 
