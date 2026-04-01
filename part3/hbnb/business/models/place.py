@@ -21,6 +21,7 @@ class Place(BaseModel):
     latitude: float | None = None
     longitude: float | None = None
     amenity_ids: List[str] = field(default_factory=list)
+    image: str = ""
 
     def __post_init__(self):
         if not isinstance(self.country, str):
