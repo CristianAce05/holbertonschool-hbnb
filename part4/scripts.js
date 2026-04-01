@@ -5,13 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const placesList = document.getElementById('places-list');
     const placeDetails = document.getElementById('place-details');
     const reviewForm = document.getElementById('review-form');
-    const rawToken = getCookie('token');
     const token = getAuthenticatedToken();
 
     initializeAuthUI(token);
     updateNavigationLinks();
     bindNavigationHandlers();
-    renderDebugPanel(rawToken, token);
 
     if (loginForm) {
         setupLoginForm(loginForm, token);
@@ -72,6 +70,8 @@ function toggleLoginVisibility(isAuthenticated) {
 }
 
 function setupLoginForm(loginForm, token) {
+    updateLoginPageContext();
+
     if (token) {
         window.location.href = getPostLoginDestination();
         return;
@@ -156,9 +156,16 @@ async function setupPlacePage(token) {
     const feedback = document.getElementById('place-feedback');
     const addReviewSection = document.getElementById('add-review');
     const addReviewLink = document.getElementById('add-review-link');
+    const reviewAccessNote = document.getElementById('review-access-note');
 
     if (addReviewSection) {
         addReviewSection.hidden = !token;
+    }
+
+    if (reviewAccessNote) {
+        reviewAccessNote.textContent = token
+            ? 'You are signed in. Use the button to add a review for this place.'
+            : 'Sign in to add a review for this place.';
     }
 
     if (!placeId) {
@@ -201,6 +208,7 @@ async function setupReviewPage(reviewForm, token) {
     const feedback = document.getElementById('review-feedback');
     const placeSelect = document.getElementById('place');
     const reviewHeading = document.getElementById('review-form-heading');
+    const reviewPlaceSummary = document.getElementById('review-place-summary');
     const supportingCopy = document.getElementById('review-supporting-copy');
     const submitButton = document.getElementById('review-submit');
     const reviewInput = document.getElementById('review');
@@ -222,13 +230,13 @@ async function setupReviewPage(reviewForm, token) {
         }
 
         populateReviewPlaceOptions(placeSelect, places, placeId);
-        updateReviewSelection(placeSelect, reviewHeading, supportingCopy);
+        updateReviewSelection(placeSelect, reviewHeading, reviewPlaceSummary, supportingCopy);
 
         placeSelect.addEventListener('change', () => {
             placeId = placeSelect.value;
             storePlaceId(placeId);
             updateNavigationLinks();
-            updateReviewSelection(placeSelect, reviewHeading, supportingCopy);
+            updateReviewSelection(placeSelect, reviewHeading, reviewPlaceSummary, supportingCopy);
             updateCurrentPagePlaceId(placeId);
         });
 
@@ -673,7 +681,7 @@ function populateReviewPlaceOptions(placeSelect, places, selectedPlaceId) {
     updateCurrentPagePlaceId(placeSelect.value);
 }
 
-function updateReviewSelection(placeSelect, reviewHeading, supportingCopy) {
+function updateReviewSelection(placeSelect, reviewHeading, reviewPlaceSummary, supportingCopy) {
     if (!placeSelect) {
         return;
     }
@@ -685,9 +693,40 @@ function updateReviewSelection(placeSelect, reviewHeading, supportingCopy) {
         reviewHeading.textContent = `Add your review for ${placeName}.`;
     }
 
+    if (reviewPlaceSummary) {
+        reviewPlaceSummary.textContent = `Selected place: ${placeName}. Share what was excellent, average, or disappointing.`;
+    }
+
     if (supportingCopy) {
         supportingCopy.textContent = 'Only authenticated users can submit reviews. Select a place, share what mattered during the stay, and your review will be posted to the API.';
     }
+}
+
+function updateLoginPageContext() {
+    const loginContext = document.getElementById('login-context');
+    if (!loginContext) {
+        return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const next = params.get('next');
+
+    if (!next) {
+        loginContext.textContent = 'Sign in to browse places and submit reviews.';
+        return;
+    }
+
+    if (next.includes('add_review.html')) {
+        loginContext.textContent = 'Sign in to continue to the add review form.';
+        return;
+    }
+
+    if (next.includes('index.html')) {
+        loginContext.textContent = 'Sign in to continue to the places list.';
+        return;
+    }
+
+    loginContext.textContent = 'Sign in to continue where you left off.';
 }
 
 function buildLoginRedirectUrl(target) {
@@ -802,54 +841,6 @@ function buildPageUrl(page, params) {
     return `/${fileName}${url.search}`;
 }
 
-function renderDebugPanel(rawToken, token) {
-    const existingPanel = document.getElementById('debug-panel');
-    if (existingPanel) {
-        existingPanel.remove();
-    }
-
-    const payload = rawToken ? decodeJwtPayload(rawToken) : null;
-    const debugItems = [
-        ['Page', window.location.pathname.split('/').pop() || 'index.html'],
-        ['Query', window.location.search || '(none)'],
-        ['Raw token cookie', rawToken ? 'present' : 'missing'],
-        ['Validated token', token ? 'valid' : 'invalid or missing'],
-        ['JWT user id', token ? (getUserIdFromToken(token) || 'missing') : '(none)'],
-        ['JWT expires', payload && typeof payload.exp === 'number' ? new Date(payload.exp * 1000).toISOString() : '(none)'],
-        ['Place id in URL', getPlaceIdFromURL() || '(none)'],
-        ['Stored place id', getStoredPlaceId() || '(none)'],
-        ['Current page target', getCurrentPageTarget()],
-        ['Login redirect URL', buildLoginRedirectUrl(getCurrentPageTarget())],
-        ['Post-login destination', getPostLoginDestination()],
-    ];
-
-    const panel = document.createElement('aside');
-    panel.id = 'debug-panel';
-    panel.className = 'debug-panel';
-    panel.innerHTML = `
-        <div class="debug-panel__header">
-            <strong>Frontend Debug</strong>
-            <button type="button" class="debug-panel__close" aria-label="Hide debug panel">Hide</button>
-        </div>
-        <dl class="debug-panel__list">
-            ${debugItems.map(([label, value]) => `
-                <div class="debug-panel__row">
-                    <dt>${escapeHtml(label)}</dt>
-                    <dd>${escapeHtml(String(value))}</dd>
-                </div>
-            `).join('')}
-        </dl>
-    `;
-
-    const closeButton = panel.querySelector('.debug-panel__close');
-    if (closeButton) {
-        closeButton.addEventListener('click', () => {
-            panel.hidden = true;
-        });
-    }
-
-    document.body.appendChild(panel);
-}
 
 function bindNavigationHandlers() {
     const navigationTargets = document.querySelectorAll(
