@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>HBNB | Add Review</title>
+    <title>HBNB | Write a Review</title>
     <meta name="api-base-url" content="http://127.0.0.1:5000/api/v1">
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,19 +27,19 @@
             </div>
         </div>
         <nav class="main-nav" aria-label="Primary navigation">
-            <a href="/index.html?v=20260331c">Places</a>
-            <a href="/place.html?v=20260331c">Place Details</a>
-            <a href="/add_review.html?v=20260331c" aria-current="page">Add Review</a>
+            <a href="/index.html?v=20260331c">Browse</a>
+            <a href="/place.html?v=20260331c">Details</a>
+            <a href="/add_review.html?v=20260331c" aria-current="page">Write Review</a>
             <a href="/login.html?v=20260331c" id="login-link">Login</a>
         </nav>
     </header>
 
     <main class="review-layout">
         <section class="add-review" aria-labelledby="review-form-heading">
-            <p class="eyebrow">Authenticated area</p>
-            <h1 id="review-form-heading">Add your review.</h1>
-            <p class="supporting-copy" id="review-supporting-copy">Write a review for the selected place.</p>
-            <p class="helper-note" id="review-place-summary">Choose a place, then describe what stood out during the stay.</p>
+            <p class="eyebrow">Share your stay</p>
+            <h1 id="review-form-heading">Write a review.</h1>
+            <p class="supporting-copy" id="review-supporting-copy">Select a stay and describe the experience clearly and honestly.</p>
+            <p class="helper-note" id="review-place-summary">Choose a stay, then describe what stood out during the visit.</p>
             <p id="review-feedback" class="form-feedback" role="alert" aria-live="polite" hidden></p>
 
             <form class="form" id="review-form" action="#" method="post" novalidate>
@@ -51,7 +51,7 @@
                 <label for="review">Review</label>
                 <textarea id="review" name="review" rows="6" placeholder="Describe the stay, the host, and the details that mattered most." required></textarea>
 
-                <button type="submit" class="details-button submit-button" id="review-submit">Submit Review</button>
+                <button type="submit" class="details-button submit-button" id="review-submit">Publish Review</button>
             </form>
         </section>
     </main>

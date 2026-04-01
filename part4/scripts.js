@@ -120,7 +120,7 @@ function setupLoginForm(loginForm, token) {
             window.location.href = getPostLoginDestination();
         } catch (error) {
             showFormFeedback(feedback, error.message || 'Unable to log in right now.', 'error');
-            setButtonSubmitting(submitButton, false, 'Sign In');
+            setButtonSubmitting(submitButton, false, 'Continue');
         }
     });
 }
@@ -164,8 +164,8 @@ async function setupPlacePage(token) {
 
     if (reviewAccessNote) {
         reviewAccessNote.textContent = token
-            ? 'You are signed in. Use the button to add a review for this place.'
-            : 'Sign in to add a review for this place.';
+            ? 'You are signed in. Use the button to share your experience.'
+            : 'Sign in to write a review for this stay.';
     }
 
     if (!placeId) {
@@ -690,15 +690,15 @@ function updateReviewSelection(placeSelect, reviewHeading, reviewPlaceSummary, s
     const placeName = selectedOption ? selectedOption.textContent : 'this place';
 
     if (reviewHeading) {
-        reviewHeading.textContent = `Add your review for ${placeName}.`;
+        reviewHeading.textContent = `Write a review for ${placeName}.`;
     }
 
     if (reviewPlaceSummary) {
-        reviewPlaceSummary.textContent = `Selected place: ${placeName}. Share what was excellent, average, or disappointing.`;
+        reviewPlaceSummary.textContent = `Selected stay: ${placeName}. Share what felt smooth, average, or disappointing.`;
     }
 
     if (supportingCopy) {
-        supportingCopy.textContent = 'Only authenticated users can submit reviews. Select a place, share what mattered during the stay, and your review will be posted to the API.';
+        supportingCopy.textContent = 'Only signed-in guests can post reviews. Select a stay and describe the experience in a clear, useful way.';
     }
 }
 
@@ -712,17 +712,17 @@ function updateLoginPageContext() {
     const next = params.get('next');
 
     if (!next) {
-        loginContext.textContent = 'Sign in to browse places and submit reviews.';
+        loginContext.textContent = 'Sign in to browse stays and write reviews.';
         return;
     }
 
     if (next.includes('add_review.html')) {
-        loginContext.textContent = 'Sign in to continue to the add review form.';
+        loginContext.textContent = 'Sign in to continue to the review form.';
         return;
     }
 
     if (next.includes('index.html')) {
-        loginContext.textContent = 'Sign in to continue to the places list.';
+        loginContext.textContent = 'Sign in to continue to the stays list.';
         return;
     }
 

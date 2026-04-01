@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>HBNB | Place Details</title>
+    <title>HBNB | Stay Details</title>
     <meta name="api-base-url" content="http://127.0.0.1:5000/api/v1">
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,9 +27,9 @@
             </div>
         </div>
         <nav class="main-nav" aria-label="Primary navigation">
-            <a href="/index.html?v=20260331c">Places</a>
-            <a href="/place.html?v=20260331c" aria-current="page">Place Details</a>
-            <a href="/add_review.html?v=20260331c">Add Review</a>
+            <a href="/index.html?v=20260331c">Browse</a>
+            <a href="/place.html?v=20260331c" aria-current="page">Details</a>
+            <a href="/add_review.html?v=20260331c">Write Review</a>
             <a href="/login.html?v=20260331c" id="login-link">Login</a>
         </nav>
     </header>
@@ -40,7 +40,7 @@
             <div class="place-hero media-loft" id="place-hero" aria-hidden="true"></div>
             <div class="place-header">
                 <div>
-                    <p class="eyebrow">Selected place</p>
+                    <p class="eyebrow">Selected stay</p>
                     <h1 id="place-name">Loading...</h1>
                     <p class="host-line" id="place-host">Hosted by loading...</p>
                 </div>
@@ -49,14 +49,14 @@
 
             <div class="place-info-grid">
                 <section class="place-info">
-                    <h2>About this stay</h2>
+                    <h2>Overview</h2>
                     <div id="place-description">
                         <p>Place description will appear here.</p>
                     </div>
                 </section>
 
                 <section class="place-info">
-                    <h2>Quick facts</h2>
+                    <h2>At a glance</h2>
                     <ul class="feature-list" id="place-facts">
                         <li>Place facts will appear here.</li>
                     </ul>
@@ -74,10 +74,10 @@
                 <div class="section-heading review-heading">
                     <div>
                         <h2 id="reviews-heading">Guest Reviews</h2>
-                        <p class="supporting-copy compact-copy" id="review-access-note">Sign in to add a review for this place.</p>
+                        <p class="supporting-copy compact-copy" id="review-access-note">Sign in to share your experience for this stay.</p>
                     </div>
                     <div id="add-review" hidden>
-                        <a href="add_review.html" class="details-button" id="add-review-link">Add a Review</a>
+                        <a href="add_review.html" class="details-button" id="add-review-link">Write a Review</a>
                     </div>
                 </div>
 

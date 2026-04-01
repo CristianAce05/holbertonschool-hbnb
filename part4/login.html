@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>HBNB | Login</title>
+    <title>HBNB | Sign In</title>
     <meta name="api-base-url" content="http://127.0.0.1:5000/api/v1">
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,26 +22,26 @@
                 <span class="brand-name">HBNB</span>
             </a>
             <div class="header-actions">
-                <a href="/login.html?v=20260331c" class="login-button" id="login-button" aria-current="page">Log In</a>
+                <a href="/login.html?v=20260331c" class="login-button" id="login-button" aria-current="page">Sign In</a>
                 <button type="button" class="login-button logout-button" id="logout-button" hidden>Log Out</button>
             </div>
         </div>
         <nav class="main-nav" aria-label="Primary navigation">
-            <a href="/index.html?v=20260331c">Places</a>
-            <a href="/place.html?v=20260331c">Place Details</a>
-            <a href="/add_review.html?v=20260331c">Add Review</a>
-            <a href="/login.html?v=20260331c" id="login-link" aria-current="page">Login</a>
+            <a href="/index.html?v=20260331c">Browse</a>
+            <a href="/place.html?v=20260331c">Details</a>
+            <a href="/add_review.html?v=20260331c">Write Review</a>
+            <a href="/login.html?v=20260331c" id="login-link" aria-current="page">Sign In</a>
         </nav>
     </header>
 
     <main class="auth-layout">
         <section class="form-shell" aria-labelledby="login-heading">
-            <p class="eyebrow">Member access</p>
-            <h1 id="login-heading">Log in to manage reviews and saved places.</h1>
-            <p class="supporting-copy" id="login-context">Sign in to browse places and submit reviews.</p>
+            <p class="eyebrow">Welcome back</p>
+            <h1 id="login-heading">Sign in to browse stays and leave reviews.</h1>
+            <p class="supporting-copy" id="login-context">Sign in to continue.</p>
             <div class="helper-card" aria-label="Demo credentials">
-                <strong>Demo account</strong>
-                <p>Use <span>flow@example.com</span> with password <span>secret123</span>.</p>
+                <strong>Sample account</strong>
+                <p>Use <span>flow@example.com</span> and <span>secret123</span> to explore the full flow.</p>
             </div>
             <p id="login-feedback" class="form-feedback" role="alert" aria-live="polite" hidden></p>
             <form class="form" id="login-form" action="#" method="post" novalidate>
@@ -51,7 +51,7 @@
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" placeholder="Enter your password" required>
 
-                <button type="submit" class="details-button submit-button" id="login-submit">Sign In</button>
+                <button type="submit" class="details-button submit-button" id="login-submit">Continue</button>
             </form>
         </section>
     </main>
