@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = getCookie('token');
 
     initializeAuthUI(token);
+    updateNavigationLinks();
 
     if (loginForm) {
         setupLoginForm(loginForm, token);
@@ -67,7 +68,7 @@ function toggleLoginVisibility(isAuthenticated) {
 
 function setupLoginForm(loginForm, token) {
     if (token) {
-        window.location.href = 'index.html';
+        window.location.href = getPostLoginDestination();
         return;
     }
 
@@ -111,7 +112,7 @@ function setupLoginForm(loginForm, token) {
             }
 
             setCookie('token', data.access_token, 1);
-            window.location.href = 'index.html';
+            window.location.href = getPostLoginDestination();
         } catch (error) {
             showFormFeedback(feedback, error.message || 'Unable to log in right now.', 'error');
             setButtonSubmitting(submitButton, false, 'Sign In');
@@ -120,7 +121,7 @@ function setupLoginForm(loginForm, token) {
 }
 
 async function setupIndexPage(placesList, token) {
-    token = requireAuthentication(token, 'login.html');
+    token = requireAuthentication(token, buildLoginRedirectUrl('index.html'));
     if (!token) {
         return;
     }
@@ -146,7 +147,7 @@ async function setupIndexPage(placesList, token) {
 }
 
 async function setupPlacePage(token) {
-    const placeId = getPlaceIdFromURL();
+    let placeId = getPlaceIdFromURL() || getStoredPlaceId();
     const feedback = document.getElementById('place-feedback');
     const addReviewSection = document.getElementById('add-review');
     const addReviewLink = document.getElementById('add-review-link');
@@ -156,7 +157,19 @@ async function setupPlacePage(token) {
     }
 
     if (!placeId) {
-        showFormFeedback(feedback, 'No place ID was provided in the URL.', 'error');
+        try {
+            const places = await fetchPlaces(token);
+            if (places.length) {
+                placeId = places[0].id;
+                window.location.replace(`place.html?id=${encodeURIComponent(placeId)}`);
+                return;
+            }
+        } catch (error) {
+            showFormFeedback(feedback, error.message || 'Unable to load place details right now.', 'error');
+            return;
+        }
+
+        showFormFeedback(feedback, 'No places are available yet.', 'error');
         return;
     }
 
@@ -174,12 +187,12 @@ async function setupPlacePage(token) {
 }
 
 async function setupReviewPage(reviewForm, token) {
-    token = requireAuthentication(token);
+    token = requireAuthentication(token, buildLoginRedirectUrl(getCurrentPageTarget()));
     if (!token) {
         return;
     }
 
-    const placeId = getPlaceIdFromURL();
+    let placeId = getPlaceIdFromURL() || getStoredPlaceId();
     const feedback = document.getElementById('review-feedback');
     const placeSelect = document.getElementById('place');
     const reviewHeading = document.getElementById('review-form-heading');
@@ -187,32 +200,36 @@ async function setupReviewPage(reviewForm, token) {
     const submitButton = document.getElementById('review-submit');
     const reviewInput = document.getElementById('review');
 
-    if (!placeId) {
-        window.location.href = 'index.html';
-        return;
-    }
-
     const userId = getUserIdFromToken(token);
     if (!userId) {
-        window.location.href = 'index.html';
+        window.location.href = buildLoginRedirectUrl(getCurrentPageTarget());
         return;
     }
 
     try {
-        const place = await fetchPlaceDetails(token, placeId);
-        populateReviewPlaceField(placeSelect, place);
-
-        if (reviewHeading) {
-            reviewHeading.textContent = `Add your review for ${place.name || 'this place'}.`;
+        const places = await fetchPlaces(token);
+        if (!places.length) {
+            throw new Error('No places are available to review yet.');
         }
 
-        if (supportingCopy) {
-            supportingCopy.textContent = 'Only authenticated users can submit reviews. Your review will be posted to the API and kept focused on the selected place.';
+        if (!placeId || !places.some((place) => place.id === placeId)) {
+            placeId = places[0].id;
         }
+
+        populateReviewPlaceOptions(placeSelect, places, placeId);
+        updateReviewSelection(placeSelect, reviewHeading, supportingCopy);
+
+        placeSelect.addEventListener('change', () => {
+            placeId = placeSelect.value;
+            storePlaceId(placeId);
+            updateNavigationLinks();
+            updateReviewSelection(placeSelect, reviewHeading, supportingCopy);
+            updateCurrentPagePlaceId(placeId);
+        });
 
         showFormFeedback(feedback, 'Ready to submit your review.', 'success');
     } catch (error) {
-        showFormFeedback(feedback, error.message || 'Unable to load the selected place.', 'error');
+        showFormFeedback(feedback, error.message || 'Unable to load available places.', 'error');
         if (placeSelect) {
             placeSelect.innerHTML = '<option value="">Unable to load place</option>';
         }
@@ -234,7 +251,7 @@ async function setupReviewPage(reviewForm, token) {
 
         try {
             await submitReview(token, {
-                placeId,
+                placeId: placeSelect ? placeSelect.value : placeId,
                 userId,
                 text: reviewText
             });
@@ -372,6 +389,9 @@ function renderPlaceDetails(place) {
     const facts = buildPlaceFacts(place);
     const amenities = Array.isArray(place.amenities) ? place.amenities : [];
     const reviews = Array.isArray(place.reviews) ? place.reviews : [];
+
+    storePlaceId(place.id || '');
+    updateNavigationLinks();
 
     document.title = `HBNB | ${place.name || 'Place Details'}`;
 
@@ -597,15 +617,105 @@ function decodeJwtPayload(token) {
     }
 }
 
-function populateReviewPlaceField(placeSelect, place) {
+function populateReviewPlaceOptions(placeSelect, places, selectedPlaceId) {
     if (!placeSelect) {
         return;
     }
 
-    const placeId = place && place.id ? place.id : '';
-    const placeName = place && place.name ? place.name : 'Selected place';
-    placeSelect.innerHTML = `<option value="${escapeHtml(placeId)}">${escapeHtml(placeName)}</option>`;
-    placeSelect.value = placeId;
+    placeSelect.disabled = false;
+    placeSelect.innerHTML = places.map((place) => {
+        const isSelected = place.id === selectedPlaceId ? ' selected' : '';
+        return `<option value="${escapeHtml(place.id || '')}"${isSelected}>${escapeHtml(place.name || 'Unnamed place')}</option>`;
+    }).join('');
+    placeSelect.value = selectedPlaceId || (places[0] && places[0].id) || '';
+    storePlaceId(placeSelect.value);
+    updateNavigationLinks();
+    updateCurrentPagePlaceId(placeSelect.value);
+}
+
+function updateReviewSelection(placeSelect, reviewHeading, supportingCopy) {
+    if (!placeSelect) {
+        return;
+    }
+
+    const selectedOption = placeSelect.options[placeSelect.selectedIndex];
+    const placeName = selectedOption ? selectedOption.textContent : 'this place';
+
+    if (reviewHeading) {
+        reviewHeading.textContent = `Add your review for ${placeName}.`;
+    }
+
+    if (supportingCopy) {
+        supportingCopy.textContent = 'Only authenticated users can submit reviews. Select a place, share what mattered during the stay, and your review will be posted to the API.';
+    }
+}
+
+function buildLoginRedirectUrl(target) {
+    return `login.html?next=${encodeURIComponent(target || getCurrentPageTarget())}`;
+}
+
+function getPostLoginDestination() {
+    const params = new URLSearchParams(window.location.search);
+    const next = params.get('next');
+
+    if (!next || /^(https?:)?\/\//i.test(next)) {
+        return 'index.html';
+    }
+
+    return next;
+}
+
+function getCurrentPageTarget() {
+    const path = window.location.pathname.split('/').pop() || 'index.html';
+    return `${path}${window.location.search || ''}`;
+}
+
+function getStoredPlaceId() {
+    try {
+        return window.localStorage.getItem('lastPlaceId');
+    } catch (error) {
+        return null;
+    }
+}
+
+function storePlaceId(placeId) {
+    if (!placeId) {
+        return;
+    }
+
+    try {
+        window.localStorage.setItem('lastPlaceId', placeId);
+    } catch (error) {
+        // Ignore storage failures and continue using the current page state.
+    }
+}
+
+function updateNavigationLinks() {
+    const currentOrStoredPlaceId = getPlaceIdFromURL() || getStoredPlaceId();
+    const placeLink = document.querySelector('.main-nav a[href="place.html"], .main-nav a[href^="place.html?id="]');
+    const reviewLink = document.querySelector('.main-nav a[href="add_review.html"], .main-nav a[href^="add_review.html?id="]');
+
+    if (placeLink && currentOrStoredPlaceId) {
+        placeLink.href = `place.html?id=${encodeURIComponent(currentOrStoredPlaceId)}`;
+    }
+
+    if (reviewLink && currentOrStoredPlaceId) {
+        reviewLink.href = `add_review.html?id=${encodeURIComponent(currentOrStoredPlaceId)}`;
+    }
+}
+
+function updateCurrentPagePlaceId(placeId) {
+    if (!placeId || !window.history || !window.history.replaceState) {
+        return;
+    }
+
+    const path = window.location.pathname.split('/').pop() || 'index.html';
+    if (path !== 'add_review.html') {
+        return;
+    }
+
+    const nextUrl = `add_review.html?id=${encodeURIComponent(placeId)}`;
+    window.history.replaceState({}, '', nextUrl);
 }
 
 function showFormFeedback(feedbackElement, message, type) {
