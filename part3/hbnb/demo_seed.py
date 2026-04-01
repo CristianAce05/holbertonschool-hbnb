@@ -66,7 +66,7 @@ def seed_demo_data(app) -> Dict[str, Any]:
         },
     )
 
-    facade.create(
+    place2 = facade.create(
         "Place",
         {
             "user_id": user["id"],
@@ -83,7 +83,7 @@ def seed_demo_data(app) -> Dict[str, Any]:
         },
     )
 
-    facade.create(
+    place3 = facade.create(
         "Place",
         {
             "user_id": user["id"],
@@ -100,7 +100,7 @@ def seed_demo_data(app) -> Dict[str, Any]:
         },
     )
 
-    facade.create(
+    place4 = facade.create(
         "Place",
         {
             "user_id": user["id"],
@@ -117,7 +117,7 @@ def seed_demo_data(app) -> Dict[str, Any]:
         },
     )
 
-    facade.create(
+    place5 = facade.create(
         "Place",
         {
             "user_id": user["id"],
@@ -140,6 +140,42 @@ def seed_demo_data(app) -> Dict[str, Any]:
             "user_id": user["id"],
             "place_id": place1["id"],
             "text": "Amazing stay! The beach was gorgeous and the house was spotless.",
+        },
+    )
+
+    facade.create(
+        "Review",
+        {
+            "user_id": user["id"],
+            "place_id": place2["id"],
+            "text": "Great location right in the city center. Loved the brick walls and the coffee shops nearby.",
+        },
+    )
+
+    facade.create(
+        "Review",
+        {
+            "user_id": user["id"],
+            "place_id": place3["id"],
+            "text": "So peaceful and quiet. Woke up to birds singing and had coffee on the porch with mountain views.",
+        },
+    )
+
+    facade.create(
+        "Review",
+        {
+            "user_id": user["id"],
+            "place_id": place4["id"],
+            "text": "Beautiful colonial charm. The garden was a lovely surprise and the hammock was perfect for afternoon naps.",
+        },
+    )
+
+    facade.create(
+        "Review",
+        {
+            "user_id": user["id"],
+            "place_id": place5["id"],
+            "text": "Incredible sunsets from the terrace. We used the kayaks every morning. Worth every penny.",
         },
     )
 
