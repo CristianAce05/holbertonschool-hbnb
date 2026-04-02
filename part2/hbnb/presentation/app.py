@@ -1,6 +1,7 @@
 """Flask application factory and simple REST endpoints for Part 2."""
 from flask import Flask, request, jsonify
 from flask_restx import Api, Namespace, Resource, fields
+from flask_cors import CORS
 
 from ..business.facade import HBNBFacade, NotFoundError, ValidationError
 from ..persistence.in_memory_repository import InMemoryRepository
@@ -9,6 +10,7 @@ from ..persistence.in_memory_repository import InMemoryRepository
 def create_app(config: dict | None = None):
     app = Flask(__name__)
     app.config.update(config or {})
+    CORS(app)
 
     api = Api(app, version="0.1", title="HBNB API", doc="/docs")
 
